@@ -290,3 +290,36 @@ class ActionExecutor:
         """
         new_hp = min(target.max_hp, target.current_hp + amount)
         return new_hp
+
+    def validate_action(
+        self,
+        action: PlayerAction,
+        actor: "Character",
+        game_state: "GameState"
+    ) -> tuple[bool, str]:
+        """
+        Validate if an action is legal.
+        
+        Returns:
+            (is_valid, error_message)
+        """
+        # Attack validation
+        if action.action_type == ActionType.ATTACK:
+            if not action.target:
+                return False, "Attack requires a target"
+            
+            target = game_state.get_character(action.target)
+            if not target:
+                available = [
+                    c.name for c in game_state.characters.values() 
+                    if not c.is_player and c.current_hp > 0
+                ]
+                return False, f"Invalid target '{action.target}'. Available: {available}"
+            
+            if target.is_player:
+                return False, "Cannot attack allies"
+            
+            if target.current_hp <= 0:
+                return False, f"{target.name} is already defeated"
+        
+        return True, ""

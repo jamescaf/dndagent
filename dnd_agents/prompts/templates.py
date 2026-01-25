@@ -28,11 +28,21 @@ Location: {location}
 Characters present: {characters}
 Situation: {situation}
 
+IMPORTANT INSTRUCTIONS:
+1. If there are threats, enemies, or NPCs mentioned in the situation, you MUST list them in npcs_present
+2. Each NPC/enemy name must be unique and specific (e.g., "goblin_scout_1", "goblin_warrior_2")
+3. If enemies are present, list them in threats as well
+4. Include concrete interactive elements players can engage with
+
 Provide your response as JSON with these fields:
 - "description": A vivid 2-3 sentence scene description
 - "available_actions": List of 3-4 suggested actions players might take
-- "npcs_present": List of NPCs in the scene (can be empty)
-- "threats": Any visible dangers or threats (can be empty)"""
+- "npcs_present": List of ALL NPCs/enemies in the scene with unique IDs (e.g., ["goblin_scout_1", "goblin_warrior_2"])
+- "threats": List of immediate dangers (should match hostile npcs_present)
+
+Example of good npcs_present for a goblin encounter:
+["goblin_warrior_1", "goblin_warrior_2", "goblin_shaman_1"]
+"""
 
     GM_RESOLVE_ACTION_PROMPT = """A player is attempting an action.
 
@@ -96,20 +106,40 @@ Respond in JSON format as specified."""
 
     PLAYER_ACTION_PROMPT = """Choose your action for this turn.
 
-Available action types:
-- "attack": Attack a target with your weapon
-- "move": Move to a new position
+CURRENT SITUATION:
+Location: {location}
+Scene: {scene_description}
+
+ENTITIES PRESENT:
+Allies: {allies}
+Enemies: {enemies}
+NPCs: {npcs}
+Objects: {objects}
+
+YOUR STATUS:
+HP: {current_hp}/{max_hp}
+{status_effects}
+
+AVAILABLE ACTIONS:
+- "attack": Attack an enemy (must specify valid enemy from list above)
+- "move": Move to a new location (if exits are described)
 - "skill": Attempt a skill check (Physical, Subterfuge, Knowledge, Communication)
 - "interact": Interact with an object or NPC
-- "defend": Take a defensive stance
-- "flee": Attempt to escape
-- "other": Any other action you can describe
+- "defend": Take a defensive stance (+2 AC)
+- "flee": Attempt to escape combat
+- "other": Describe any other action
+
+IMPORTANT:
+- If you attack, you MUST target a specific enemy from the "Enemies:" list
+- If no enemies are present, choose a non-combat action
+- Stay in character based on your class and personality
 
 Respond as JSON with:
 - "action_type": One of the action types above
-- "target": Who or what you're targeting (if applicable)
+- "target": Specific entity name from lists above (if applicable)
 - "description": Brief description of what you're doing (1 sentence)
-- "dialogue": What you say, if anything (can be null)"""
+- "dialogue": What you say, if anything (can be null)
+"""
 
     PLAYER_DIALOGUE_PROMPT = """You're in a conversation.
 

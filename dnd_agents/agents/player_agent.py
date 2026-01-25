@@ -76,10 +76,46 @@ class PlayerAgent(BaseAgent):
             self.character = updated_char
             self.update_system_prompt()
 
-        # Build context-aware prompt
+        # Get entities at current location
+        location_entities = self.context_manager.knowledge_graph.get_entities_at_location(
+            game_state.current_location
+        )
+        
+        # Categorize entities
+        allies = []
+        enemies = []
+        npcs = []
+        
+        for entity_id in [e.id for e in location_entities]:
+            char = game_state.get_character(entity_id)
+            if char:
+                if char.is_player:
+                    allies.append(char.name)
+                elif char.current_hp > 0:
+                    entity = self.context_manager.knowledge_graph.get_entity(entity_id)
+                    if entity and entity.properties.get("is_hostile"):
+                        enemies.append(char.name)
+                    else:
+                        npcs.append(char.name)
+        
+        # Format the prompt with entity lists
+        from ..prompts.templates import PromptTemplates
+        
+        action_prompt = PromptTemplates.PLAYER_ACTION_PROMPT.format(
+            location=game_state.current_location,
+            scene_description=self.context_manager.scene_summary or "A mysterious area",
+            allies=", ".join(allies) if allies else "None",
+            enemies=", ".join(enemies) if enemies else "None",
+            npcs=", ".join(npcs) if npcs else "None",
+            objects="[examine scene for objects]",
+            current_hp=self.character.current_hp,
+            max_hp=self.character.max_hp,
+            status_effects=", ".join(self.character.conditions) if self.character.conditions else "None"
+        )
+        
         system_prompt, user_prompt = self.build_context_prompt(
-            action_prompt=PromptTemplates.PLAYER_ACTION_PROMPT,
-            relevant_entity_ids=[self.character.name]
+            action_prompt=action_prompt,
+            relevant_entity_ids=[self.character.name] + enemies
         )
 
         # Generate action

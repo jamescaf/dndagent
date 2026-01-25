@@ -110,6 +110,26 @@ class GMSceneResponse(BaseModel):
             threats=[]
         )
 
+class GMSpawnEntity(BaseModel):
+    """GM spawns a new entity (NPC, monster, item)."""
+    entity_type: Literal["npc", "monster", "item"]
+    entity_id: str = Field(description="Unique identifier")
+    name: str
+    stats: dict[str, int] | None = Field(default=None)
+    equipment: dict[str, str] = Field(default_factory=dict)
+    hp: int | None = None
+    description: str = Field(max_length=100)
+    
+class GMUpdateEntity(BaseModel):
+    """GM modifies an existing entity."""
+    entity_id: str
+    changes: dict[str, Any]
+    narrative: str = Field(max_length=100)
+
+class GMRemoveEntity(BaseModel):
+    """GM removes an entity from the game."""
+    entity_id: str
+    reason: str
 
 class GMActionResolution(BaseModel):
     """GM's resolution of a player action."""
