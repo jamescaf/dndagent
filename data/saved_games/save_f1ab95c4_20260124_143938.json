@@ -1,0 +1,83 @@
+{
+  "session_id": "f1ab95c4",
+  "current_turn": 1,
+  "phase": "exploration",
+  "current_location": "Cave Entrance",
+  "characters": {
+    "Thorin": {
+      "name": "Thorin",
+      "character_class": "Fighter",
+      "stats": {
+        "STR": 3,
+        "DEX": 1,
+        "MIND": 0,
+        "CHA": 1
+      },
+      "max_hp": 9,
+      "current_hp": 9,
+      "equipment": {
+        "weapon": "longsword",
+        "armor": "chainmail"
+      },
+      "level": 1,
+      "is_player": true,
+      "is_active": true,
+      "conditions": [],
+      "background": "A battle-hardened dwarf warrior seeking glory"
+    },
+    "Elara": {
+      "name": "Elara",
+      "character_class": "Mage",
+      "stats": {
+        "STR": -1,
+        "DEX": 2,
+        "MIND": 3,
+        "CHA": 1
+      },
+      "max_hp": 5,
+      "current_hp": 5,
+      "equipment": {
+        "weapon": "staff",
+        "armor": "robes"
+      },
+      "level": 1,
+      "is_player": true,
+      "is_active": true,
+      "conditions": [],
+      "background": "An elven scholar studying ancient magic"
+    },
+    "Finn": {
+      "name": "Finn",
+      "character_class": "Rogue",
+      "stats": {
+        "STR": 0,
+        "DEX": 3,
+        "MIND": 1,
+        "CHA": 2
+      },
+      "max_hp": 6,
+      "current_hp": 6,
+      "equipment": {
+        "weapon": "daggers",
+        "armor": "leather"
+      },
+      "level": 1,
+      "is_player": true,
+      "is_active": true,
+      "conditions": [],
+      "background": "A charming halfling thief with a heart of gold"
+    }
+  },
+  "combat": {
+    "is_active": false,
+    "initiative_order": [],
+    "current_turn_index": 0,
+    "round_number": 1,
+    "enemies": []
+  },
+  "flags": {
+    "situation": "The party has been hired to clear a cave of goblins threatening a nearby village."
+  },
+  "created_at": "2026-01-24T14:39:34.992414",
+  "updated_at": "2026-01-24T14:39:34.992922"
+}

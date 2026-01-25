@@ -1,0 +1,90 @@
+{
+  "current_turn": 3,
+  "scene_summary": "The air in the Cave Entrance is thick with the smell of damp earth and something vaguely metallic \u2013 a lingering scent of goblin blood, perhaps. A narrow passage carved into the rock wall leads into the darkness, illuminated only by the faint, sickly green glow of phosphorescent moss clinging to the walls. Small, crudely carved goblin symbols are etched into the stone, and you can hear the faint scratching of claws echoing from within the passage. A single, overturned rock pile lies near the entrance, suggesting recent activity, and a thick layer of dust covers everything. The moss emits a subtle, unsettling luminescence, casting dancing shadows across the walls, revealing strange, almost hypnotic patterns in the moss\u2019s growth. A single, rusted iron pickaxe lies discarded near the entrance, partially obscured by the dust.",
+  "action_history": [
+    {
+      "turn": 1,
+      "actor": "GM",
+      "action_type": "narration",
+      "description": "The air in the Cave Entrance is thick with the smell of damp earth and something vaguely metallic \u2013 a lingering scent of goblin blood, perhaps.  A narrow passage carved into the rock wall leads into the darkness, illuminated only by the faint, sickly green glow of phosphorescent moss clinging to the walls.  Small, crudely carved goblin symbols are etched into the stone, and you can hear the faint scratching of claws echoing from within the passage.  A single, overturned rock pile lies near the entrance, suggesting recent activity, and a thick layer of dust covers everything.",
+      "result": null
+    },
+    {
+      "turn": 1,
+      "actor": "Thorin",
+      "action_type": "move",
+      "description": "I cautiously approach the edge of the passage, scanning the darkness for any immediate threats.",
+      "result": "Thorin moves toward Thorin."
+    },
+    {
+      "turn": 1,
+      "actor": "Elara",
+      "action_type": "move",
+      "description": "I cautiously move forward, keeping my eyes fixed on Thorin's position.",
+      "result": "Elara moves toward Thorin."
+    },
+    {
+      "turn": 1,
+      "actor": "Finn",
+      "action_type": "move",
+      "description": "I carefully step into the passage, keeping a respectful distance from Thorin.",
+      "result": "Finn moves toward Thorin."
+    },
+    {
+      "turn": 2,
+      "actor": "GM",
+      "action_type": "narration",
+      "description": "The air in the Cave Entrance is thick with the smell of damp earth and something vaguely metallic \u2013 a lingering scent of goblin blood, perhaps. A narrow passage carved into the rock wall leads into the darkness, illuminated only by the faint, sickly green glow of phosphorescent moss clinging to the walls. Small, crudely carved goblin symbols are etched into the stone, and you can hear the faint scratching of claws echoing from within the passage. A single, overturned rock pile lies near the entrance, suggesting recent activity, and a thick layer of dust covers everything. The moss emits a subtle, unsettling luminescence, casting dancing shadows across the walls.",
+      "result": null
+    },
+    {
+      "turn": 2,
+      "actor": "Thorin",
+      "action_type": "move",
+      "description": "I cautiously approach the edge of the passage, scanning the darkness for any immediate threats.",
+      "result": "Thorin moves toward Thorin."
+    },
+    {
+      "turn": 2,
+      "actor": "Elara",
+      "action_type": "move",
+      "description": "I slowly and deliberately move forward, maintaining a respectful distance and keeping my gaze fixed on Thorin's position.",
+      "result": "Elara moves toward Thorin."
+    },
+    {
+      "turn": 2,
+      "actor": "Finn",
+      "action_type": "move",
+      "description": "I carefully step into the passage, keeping a respectful distance from Thorin.",
+      "result": "Finn moves toward Thorin."
+    },
+    {
+      "turn": 3,
+      "actor": "GM",
+      "action_type": "narration",
+      "description": "The air in the Cave Entrance is thick with the smell of damp earth and something vaguely metallic \u2013 a lingering scent of goblin blood, perhaps. A narrow passage carved into the rock wall leads into the darkness, illuminated only by the faint, sickly green glow of phosphorescent moss clinging to the walls. Small, crudely carved goblin symbols are etched into the stone, and you can hear the faint scratching of claws echoing from within the passage. A single, overturned rock pile lies near the entrance, suggesting recent activity, and a thick layer of dust covers everything. The moss emits a subtle, unsettling luminescence, casting dancing shadows across the walls, revealing strange, almost hypnotic patterns in the moss\u2019s growth. A single, rusted iron pickaxe lies discarded near the entrance, partially obscured by the dust.",
+      "result": null
+    },
+    {
+      "turn": 3,
+      "actor": "Thorin",
+      "action_type": "move",
+      "description": "I cautiously approach the edge of the passage, scanning the darkness for any immediate threats.",
+      "result": "Thorin moves toward Thorin."
+    },
+    {
+      "turn": 3,
+      "actor": "Elara",
+      "action_type": "move",
+      "description": "I carefully move forward, maintaining a respectful distance and keeping my gaze fixed on Thorin's position.",
+      "result": "Elara moves toward Thorin."
+    },
+    {
+      "turn": 3,
+      "actor": "Finn",
+      "action_type": "move",
+      "description": "I carefully step into the passage, keeping a respectful distance from Thorin.",
+      "result": "Finn moves toward Thorin."
+    }
+  ]
+}

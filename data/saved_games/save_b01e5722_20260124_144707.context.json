@@ -1,0 +1,272 @@
+{
+  "current_turn": 10,
+  "scene_summary": "The Cave Entrance is a damp, narrow passage carved into the side of a sheer cliff. The air hangs heavy with the smell of mildew and something faintly metallic \u2013 like old blood. Torches flicker sporadically, casting long, dancing shadows that writhe and shift with the movement of the stone. A crude, moss-covered altar stands at the far end, partially obscured by a tangle of roots and fallen debris. You can hear the drip, drip, drip of water echoing through the space, and a distant, unsettling rustling sound seems to come from the deeper recesses of the cave.",
+  "action_history": [
+    {
+      "turn": 1,
+      "actor": "GM",
+      "action_type": "narration",
+      "description": "The air in the Cave Entrance is thick with the smell of damp earth and something vaguely metallic \u2013 a smell that clings to the back of your throats. Moonlight filters weakly through a narrow opening in the cave ceiling, illuminating a chaotic scene of goblin skirmishes.  Several goblins, clad in crude leather armor and wielding rusty knives, are frantically scrambling to defend a makeshift barricade constructed from loose rocks and fallen timber. A large, snarling goblin with a particularly vicious-looking scar is attempting to flank Thorin, while a dozen others are jostling for position around him.",
+      "result": null
+    },
+    {
+      "turn": 1,
+      "actor": "Thorin",
+      "action_type": "attack",
+      "description": "I draw my longsword, aiming to strike at the goblin's flank with a swift, decisive blow.",
+      "result": "Thorin swings at nothing!"
+    },
+    {
+      "turn": 1,
+      "actor": "Elara",
+      "action_type": "attack",
+      "description": "I swiftly raise my staff, channeling a minor illusion of a swirling mist, attempting to momentarily disorient the snarling goblin.",
+      "result": "Elara attacks Thorin but misses! Miss! (1d20-1 = [6]-1 = 5)"
+    },
+    {
+      "turn": 1,
+      "actor": "Finn",
+      "action_type": "attack",
+      "description": "Finn carefully assesses the goblin\u2019s position, noticing a slight hesitation before attempting a blow.",
+      "result": "Finn swings at nothing!"
+    },
+    {
+      "turn": 2,
+      "actor": "GM",
+      "action_type": "narration",
+      "description": "You find yourselves in a dimly lit area. The air is still.",
+      "result": null
+    },
+    {
+      "turn": 2,
+      "actor": "Thorin",
+      "action_type": "attack",
+      "description": "I draw my longsword, aiming to strike at the goblin\u2019s flank with a swift, decisive blow.",
+      "result": "Thorin swings at nothing!"
+    },
+    {
+      "turn": 2,
+      "actor": "Elara",
+      "action_type": "attack",
+      "description": "I raise my staff and attempt to cast a minor illusion of a swirling mist, hoping to momentarily disorient the snarling goblin.",
+      "result": "Elara attacks Thorin but misses! Miss! (1d20-1 = [16]-1 = 15)"
+    },
+    {
+      "turn": 2,
+      "actor": "Finn",
+      "action_type": "attack",
+      "description": "Finn carefully assesses the goblin's position, noticing a slight hesitation before attempting a blow. -> Finn swings at nothing!",
+      "result": "Finn swings at nothing!"
+    },
+    {
+      "turn": 3,
+      "actor": "GM",
+      "action_type": "narration",
+      "description": "The air in the Cave Entrance is thick with the smell of damp earth and something vaguely metallic \u2013 a smell that clings to the back of your throats. Moonlight filters weakly through a narrow opening in the cave ceiling, illuminating a chaotic scene of goblin skirmishes. Several goblins, clad in crude leather armor and wielding rusty knives, are frantically scrambling to defend a makeshift barricade constructed from loose rocks and fallen timber. A large, snarling goblin with a particularly vicious-looking scar is attempting to flank Thorin, while a dozen others are jostling for position around him. The cave floor is littered with broken stone and discarded weapons, and the flickering light reveals numerous tiny holes in the walls, suggesting a cramped and unstable space.",
+      "result": null
+    },
+    {
+      "turn": 3,
+      "actor": "Thorin",
+      "action_type": "attack",
+      "description": "I draw my longsword, aiming to strike at the goblin\u2019s flank with a swift, decisive blow.",
+      "result": "Thorin swings at nothing!"
+    },
+    {
+      "turn": 3,
+      "actor": "Elara",
+      "action_type": "attack",
+      "description": "Elara focuses her energy and channels a minor illusion of a swirling mist, aiming to momentarily disorient Thorin. She raises her staff, unleashing a pulse of arcane energy, hoping to momentarily blind him.",
+      "result": "Elara attacks Thorin but misses! Miss! (1d20-1 = [1]-1 = 0)"
+    },
+    {
+      "turn": 3,
+      "actor": "Finn",
+      "action_type": "attack",
+      "description": "Finn carefully assesses the goblin\u2019s position, noticing a slight hesitation before attempting a blow. He aims to strike at the goblin\u2019s flank with a swift, decisive blow, hoping to disrupt their defense.",
+      "result": "Finn attacks Thorin but misses! Miss! (1d20 = [13] = 13)"
+    },
+    {
+      "turn": 4,
+      "actor": "GM",
+      "action_type": "narration",
+      "description": "The air in the Cave Entrance is thick with the smell of damp earth and something vaguely metallic \u2013 a smell that clings to the back of your throats. Moonlight filters weakly through a narrow opening in the cave ceiling, illuminating a chaotic scene of goblin skirmishes. Several goblins, clad in crude leather armor and wielding rusty knives, are frantically scrambling to defend a makeshift barricade constructed from loose rocks and fallen timber. A large, snarling goblin with a particularly vicious-looking scar is attempting to flank Thorin, while a dozen others are jostling for position around him. The cave floor is littered with broken stone and discarded weapons, and the flickering light reveals numerous tiny holes in the walls, suggesting a cramped and unstable space.  A crudely drawn symbol of a serpent is etched into the rock near the barricade.",
+      "result": null
+    },
+    {
+      "turn": 4,
+      "actor": "Thorin",
+      "action_type": "attack",
+      "description": "I draw my longsword and charge, aiming to strike at the goblin\u2019s flank with a swift, decisive blow.",
+      "result": "Thorin swings at nothing!"
+    },
+    {
+      "turn": 4,
+      "actor": "Elara",
+      "action_type": "attack",
+      "description": "Elara focuses her energy and channels a minor illusion of a swirling mist, aiming to momentarily disorient Thorin.",
+      "result": "Elara strikes Thorin with their staff! Hit! (1d20-1 = [19]-1 = 18) for 2 damage (1d6 = [3] = 3) Thorin still standing."
+    },
+    {
+      "turn": 4,
+      "actor": "Finn",
+      "action_type": "attack",
+      "description": "Finn carefully assesses the goblin\u2019s position, noticing a slight hesitation before attempting a blow. He aims to strike at the goblin\u2019s flank with a swift, decisive blow, hoping to disrupt their defense.",
+      "result": "Finn attacks Thorin but misses! Miss! (1d20 = [3] = 3)"
+    },
+    {
+      "turn": 5,
+      "actor": "GM",
+      "action_type": "narration",
+      "description": "The air in the Cave Entrance hangs heavy with the scent of damp earth and something vaguely metallic \u2013 a smell that clings to the back of your throats. Moonlight, fractured by a narrow opening high above, illuminates a chaotic scene of goblin skirmishes. Several goblins, clad in crude leather armor and wielding rusty knives, are frantically scrambling to defend a makeshift barricade constructed from loose rocks and fallen timber. A large, snarling goblin with a particularly vicious-looking scar is attempting to flank Thorin, while a dozen others are jostling for position around him. The cave floor is littered with broken stone and discarded weapons, and the flickering light reveals numerous tiny holes in the walls, suggesting a cramped and unstable space. A crudely drawn symbol of a serpent is etched into the rock near the barricade.",
+      "result": null
+    },
+    {
+      "turn": 5,
+      "actor": "Thorin",
+      "action_type": "attack",
+      "description": "I draw my longsword and charge, aiming to strike at the goblin\u2019s flank with a swift, decisive blow.",
+      "result": "Thorin swings at nothing!"
+    },
+    {
+      "turn": 5,
+      "actor": "Elara",
+      "action_type": "attack",
+      "description": "Elara focuses her energy and channels a minor illusion of a swirling mist, aiming to momentarily disorient Thorin. She raises her staff, unleashing a pulse of arcane energy, hoping to momentarily blind him.",
+      "result": "Elara attacks Thorin but misses! Miss! (1d20-1 = [5]-1 = 4)"
+    },
+    {
+      "turn": 5,
+      "actor": "Finn",
+      "action_type": "attack",
+      "description": "Finn carefully assesses the goblin\u2019s position, noticing a slight hesitation before attempting a blow. He aims to strike at the goblin\u2019s flank with a swift, decisive blow, hoping to disrupt their defense.",
+      "result": "Finn strikes Thorin with their daggers! Hit! (1d20 = [18] = 18) for 4 damage (1d4 = [4] = 4) Thorin looks badly wounded."
+    },
+    {
+      "turn": 6,
+      "actor": "GM",
+      "action_type": "narration",
+      "description": "The air in the Cave Entrance is thick with the scent of damp earth and something vaguely metallic \u2013 a smell that clings to the back of your throats. Moonlight, fractured by a narrow opening high above, illuminates a chaotic scene of goblin skirmishes. Several goblins, clad in crude leather armor and wielding rusty knives, are frantically scrambling to defend a makeshift barricade constructed from loose rocks and fallen timber. A large, snarling goblin with a particularly vicious-looking scar is attempting to flank Thorin, while a dozen others are jostling for position around him. The cave floor is littered with broken stone and discarded weapons, and the flickering light reveals numerous tiny holes in the walls, suggesting a cramped and unstable space. A crudely drawn symbol of a serpent is etched into the rock near the barricade.  A small, overturned wooden chest lies nearby, partially buried in the debris.",
+      "result": null
+    },
+    {
+      "turn": 6,
+      "actor": "Thorin",
+      "action_type": "defend",
+      "description": "Takes a defensive stance, watching for danger",
+      "result": "Thorin takes a defensive stance, ready to react to danger. (+2 AC until next turn)"
+    },
+    {
+      "turn": 6,
+      "actor": "Elara",
+      "action_type": "attack",
+      "description": "Elara focuses her energy and channels a minor illusion of a swirling mist, aiming to momentarily disorient Thorin.",
+      "result": "Elara attacks Thorin but misses! Miss! (1d20-1 = [10]-1 = 9)"
+    },
+    {
+      "turn": 6,
+      "actor": "Finn",
+      "action_type": "attack",
+      "description": "Finn carefully assesses the goblin's position, noticing a slight hesitation before attempting a blow. He aims to strike at the goblin's flank with a swift, decisive blow, hoping to disrupt their defense.",
+      "result": "Finn attacks Thorin but misses! Miss! (1d20 = [10] = 10)"
+    },
+    {
+      "turn": 7,
+      "actor": "GM",
+      "action_type": "narration",
+      "description": "The air in the Cave Entrance is thick with the scent of damp earth and something vaguely metallic \u2013 a smell that clings to the back of your throats. Moonlight, fractured by a narrow opening high above, illuminates a chaotic scene of goblin skirmishes. Several goblins, clad in crude leather armor and wielding rusty knives, are frantically scrambling to defend a makeshift barricade constructed from loose rocks and fallen timber. A large, snarling goblin with a particularly vicious-looking scar is attempting to flank Thorin, while a dozen others are jostling for position around him. The cave floor is littered with broken stone and discarded weapons, and the flickering light reveals numerous tiny holes in the walls, suggesting a cramped and unstable space. A crudely drawn symbol of a serpent is etched into the rock near the barricade. A small, overturned wooden chest lies nearby, partially buried in the debris.",
+      "result": null
+    },
+    {
+      "turn": 7,
+      "actor": "Thorin",
+      "action_type": "attack",
+      "description": "Thorin shifts his weight, preparing to charge at the goblin.",
+      "result": "Thorin swings at nothing!"
+    },
+    {
+      "turn": 7,
+      "actor": "Elara",
+      "action_type": "attack",
+      "description": "Elara focuses her energy and channels a minor illusion of a swirling mist, aiming to momentarily disorient Thorin. She raises her staff, unleashing a pulse of arcane energy, hoping to momentarily blind him. Miss!",
+      "result": "Elara attacks Thorin but misses! Miss! (1d20-1 = [7]-1 = 6)"
+    },
+    {
+      "turn": 7,
+      "actor": "Finn",
+      "action_type": "attack",
+      "description": "Finn carefully assesses the goblin\u2019s position, noticing a slight hesitation before attempting a blow. He aims to strike at the goblin\u2019s flank with a swift, decisive blow, hoping to disrupt their defense.",
+      "result": "Finn attacks Thorin but misses! Miss! (1d20 = [7] = 7)"
+    },
+    {
+      "turn": 8,
+      "actor": "GM",
+      "action_type": "narration",
+      "description": "You find yourselves in a dimly lit area. The air is still.",
+      "result": null
+    },
+    {
+      "turn": 8,
+      "actor": "Thorin",
+      "action_type": "attack",
+      "description": "Thorin shifts his weight, preparing to charge at the goblin.",
+      "result": "Thorin swings at nothing!"
+    },
+    {
+      "turn": 8,
+      "actor": "Elara",
+      "action_type": "attack",
+      "description": "Elara focuses her energy and channels a minor illusion of a swirling mist, aiming to momentarily disorient Thorin.",
+      "result": "Elara attacks Thorin but misses! Miss! (1d20-1 = [2]-1 = 1)"
+    },
+    {
+      "turn": 8,
+      "actor": "Finn",
+      "action_type": "attack",
+      "description": "Finn carefully assesses the goblin\u2019s position, noticing a slight hesitation before attempting a blow. He aims to strike at the goblin\u2019s flank with a swift, decisive blow, hoping to disrupt their defense.",
+      "result": "Finn strikes Thorin with their daggers! Hit! (1d20 = [17] = 17) for 3 damage (1d4 = [3] = 3) Thorin falls unconscious."
+    },
+    {
+      "turn": 9,
+      "actor": "GM",
+      "action_type": "narration",
+      "description": "You find yourselves in a dimly lit area. The air is still.",
+      "result": null
+    },
+    {
+      "turn": 9,
+      "actor": "Elara",
+      "action_type": "attack",
+      "description": "Elara focuses her energy and channels a minor illusion of a swirling mist, aiming to momentarily disorient Thorin. She raises her staff, unleashing a pulse of arcane energy, hoping to momentarily blind him. Miss!",
+      "result": "Elara attacks Thorin but misses! Miss! (1d20-1 = [1]-1 = 0)"
+    },
+    {
+      "turn": 9,
+      "actor": "Finn",
+      "action_type": "attack",
+      "description": "Finn swiftly moves forward, aiming for Thorin's flank with a practiced, swift strike.",
+      "result": "Finn attacks Thorin but misses! Miss! (1d20 = [14] = 14)"
+    },
+    {
+      "turn": 10,
+      "actor": "GM",
+      "action_type": "narration",
+      "description": "The Cave Entrance is a damp, narrow passage carved into the side of a sheer cliff. The air hangs heavy with the smell of mildew and something faintly metallic \u2013 like old blood. Torches flicker sporadically, casting long, dancing shadows that writhe and shift with the movement of the stone. A crude, moss-covered altar stands at the far end, partially obscured by a tangle of roots and fallen debris. You can hear the drip, drip, drip of water echoing through the space, and a distant, unsettling rustling sound seems to come from the deeper recesses of the cave.",
+      "result": null
+    },
+    {
+      "turn": 10,
+      "actor": "Elara",
+      "action_type": "attack",
+      "description": "Elara focuses her energy and channels a minor illusion of a swirling mist, aiming to momentarily disorient Thorin.",
+      "result": "Elara attacks Thorin but misses! Miss! (1d20-1 = [9]-1 = 8)"
+    },
+    {
+      "turn": 10,
+      "actor": "Finn",
+      "action_type": "attack",
+      "description": "Finn carefully assesses the goblin\u2019s position, noticing a slight hesitation before attempting a blow. He aims to strike at the goblin\u2019s flank with a swift, decisive blow, hoping to disrupt their defense.",
+      "result": "Finn attacks Thorin but misses! Miss! (1d20 = [6] = 6)"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+# D&D Agents Game Configuration
+
+# LLM Settings
+llm:
+  base_url: "http://localhost:11434"
+  model: "gemma3:1b"
+  temperature: 0.7
+  max_tokens: 256
+  max_retries: 3
+  timeout: 60
+
+# Game Settings
+game:
+  max_turns: 100
+  auto_save_interval: 5
+  save_directory: "data/saved_games"
+
+# Context Management (2048 token budget)
+context:
+  max_history_actions: 8
+  max_kg_facts: 10
+  summarize_after_turns: 10
+
+# Player Characters
+players:
+  - name: "Thorin"
+    class: "Fighter"
+    stats:
+      STR: 3
+      DEX: 1
+      MIND: 0
+      CHA: 1
+    equipment:
+      weapon: "longsword"
+      armor: "chainmail"
+    background: "A battle-hardened dwarf warrior seeking glory"
+
+  - name: "Elara"
+    class: "Mage"
+    stats:
+      STR: -1
+      DEX: 2
+      MIND: 3
+      CHA: 1
+    equipment:
+      weapon: "staff"
+      armor: "robes"
+    background: "An elven scholar studying ancient magic"
+
+  - name: "Finn"
+    class: "Rogue"
+    stats:
+      STR: 0
+      DEX: 3
+      MIND: 1
+      CHA: 2
+    equipment:
+      weapon: "daggers"
+      armor: "leather"
+    background: "A charming halfling thief with a heart of gold"
+
+# Starting Scenario
+scenario:
+  name: "The Goblin Cave"
+  description: "The party has been hired to clear a cave of goblins threatening a nearby village."
+  starting_location: "Cave Entrance"

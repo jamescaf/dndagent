@@ -1,0 +1,20 @@
+{
+  "current_turn": 1,
+  "scene_summary": "The air in the Cave Entrance is thick with the smell of damp earth and something vaguely metallic \u2013 a smell that clings to the back of your throats.  A narrow, twisting passage leads deeper into the cave, the walls slick with moisture and covered in strange, swirling moss.  Torches flicker sporadically, casting dancing shadows that exaggerate the already oppressive darkness, and you hear the faint dripping of water and the occasional rustling from within the cave's depths.  A cluster of goblin tracks \u2013 small, muddy prints \u2013 are visible leading into the passage, suggesting recent activity.",
+  "action_history": [
+    {
+      "turn": 1,
+      "actor": "GM",
+      "action_type": "narration",
+      "description": "The air in the Cave Entrance is thick with the smell of damp earth and something vaguely metallic \u2013 a smell that clings to the back of your throats.  A narrow, twisting passage leads deeper into the cave, the walls slick with moisture and covered in strange, swirling moss.  Torches flicker sporadically, casting dancing shadows that exaggerate the already oppressive darkness, and you hear the faint dripping of water and the occasional rustling from within the cave's depths.  A cluster of goblin tracks \u2013 small, muddy prints \u2013 are visible leading into the passage, suggesting recent activity.",
+      "result": null
+    },
+    {
+      "turn": 1,
+      "actor": "Thorin",
+      "action_type": "attack",
+      "description": "I draw my longsword and prepare to strike, scanning the shadows for any movement.",
+      "result": "Thorin swings at nothing!"
+    }
+  ]
+}

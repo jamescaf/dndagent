@@ -1,0 +1,79 @@
+{
+  "entities": [
+    {
+      "id": "Thorin",
+      "name": "Thorin",
+      "entity_type": "character",
+      "properties": {
+        "class": "Fighter",
+        "max_hp": 9,
+        "current_hp": 9,
+        "is_player": true
+      },
+      "created_at": "2026-01-24T14:39:57.766715",
+      "updated_at": "2026-01-24T14:39:57.766716"
+    },
+    {
+      "id": "Elara",
+      "name": "Elara",
+      "entity_type": "character",
+      "properties": {
+        "class": "Mage",
+        "max_hp": 5,
+        "current_hp": 5,
+        "is_player": true
+      },
+      "created_at": "2026-01-24T14:39:57.766812",
+      "updated_at": "2026-01-24T14:39:57.766812"
+    },
+    {
+      "id": "Finn",
+      "name": "Finn",
+      "entity_type": "character",
+      "properties": {
+        "class": "Rogue",
+        "max_hp": 6,
+        "current_hp": 6,
+        "is_player": true
+      },
+      "created_at": "2026-01-24T14:39:57.766902",
+      "updated_at": "2026-01-24T14:39:57.766902"
+    },
+    {
+      "id": "Cave Entrance",
+      "name": "Cave Entrance",
+      "entity_type": "location",
+      "properties": {
+        "description": "The party has been hired to clear a cave of goblins threatening a nearby village."
+      },
+      "created_at": "2026-01-24T14:39:57.766935",
+      "updated_at": "2026-01-24T14:39:57.766936"
+    }
+  ],
+  "edges": [
+    {
+      "source": "Thorin",
+      "target": "Cave Entrance",
+      "data": {
+        "relation_type": "located_at",
+        "properties": {}
+      }
+    },
+    {
+      "source": "Elara",
+      "target": "Cave Entrance",
+      "data": {
+        "relation_type": "located_at",
+        "properties": {}
+      }
+    },
+    {
+      "source": "Finn",
+      "target": "Cave Entrance",
+      "data": {
+        "relation_type": "located_at",
+        "properties": {}
+      }
+    }
+  ]
+}
