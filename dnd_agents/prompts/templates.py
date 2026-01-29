@@ -16,7 +16,12 @@ Your responsibilities:
 - Keep the story moving forward
 
 Rules reminders:
-- Skill checks: d20 + stat bonus vs DC (Easy=10, Medium=15, Hard=20)
+- Skill checks: d20 + stat bonus vs DC
+  * DC 10 (Easy): Simple tasks like looking around, basic climbing, casual persuasion
+  * DC 15 (Medium): Moderate challenges, standard locks, convincing skeptical NPCs
+  * DC 20 (Hard): Complex tasks, magical locks, ancient texts, sneaking past alert guards
+  * DC 25 (Very Hard): Near-impossible feats, legendary challenges
+- VARY the difficulty based on the task - not everything should be DC 15!
 - Combat: d20 + attack bonus vs AC, damage is weapon die + stat bonus
 - Keep encounters balanced but challenging
 
@@ -99,10 +104,46 @@ Stats: STR {str_bonus:+d}, DEX {dex_bonus:+d}, MIND {mind_bonus:+d}, CHA {cha_bo
 HP: {current_hp}/{max_hp}
 Equipment: {equipment}
 
+CLASS ABILITIES:
+{class_abilities}
+
 Stay in character. Make decisions your character would make based on their personality and situation.
 Be proactive and engage with the story. Take risks appropriate to your character.
+USE YOUR CLASS ABILITIES - they are your strengths!
 
 Respond in JSON format as specified."""
+
+    # Class-specific ability descriptions
+    CLASS_ABILITIES = {
+        "Fighter": """- You excel at melee combat with your high STR
+- Attack enemies directly - you can take and deal significant damage
+- Use Physical skills for feats of strength
+- You have the highest HP and best armor - get into the fight!""",
+
+        "Mage": """- Cast spells using your high MIND stat for attack rolls and damage
+- Use "cast" action to throw fire, lightning, frost, or arcane bolts at enemies
+- You can also cast healing spells on yourself or allies
+- Cast protective/buff spells to shield the party
+- Use Knowledge skills to identify magical items and recall lore
+- Stay at range - your HP is low but your magic is powerful!""",
+
+        "Rogue": """- Use Subterfuge skills to sneak, hide, pick locks, and disable traps
+- Attack from stealth for devastating effect
+- Your high DEX makes you accurate and hard to hit
+- Use Communication skills to deceive or charm NPCs
+- Scout ahead and find hidden dangers before the party walks into them
+- Be cunning - use the environment to your advantage!""",
+
+        "Cleric": """- Cast healing spells to restore allies' HP
+- Cast protective spells to buff the party
+- Use your MIND stat for spell effectiveness
+- You can also fight in melee if needed
+- Use Knowledge skills for religious and divine lore""",
+
+        "default": """- Use your highest stats to your advantage
+- Attack enemies when in combat
+- Use skills that match your best stats"""
+    }
 
     PLAYER_ACTION_PROMPT = """Choose your action for this turn.
 
@@ -121,18 +162,28 @@ HP: {current_hp}/{max_hp}
 {status_effects}
 
 AVAILABLE ACTIONS:
-- "attack": Attack an enemy (must specify valid enemy from list above)
-- "move": Move to a new location (if exits are described)
+- "attack": Melee/ranged weapon attack (Fighters excel here - uses STR/DEX)
+- "cast": Cast a spell (Mages/Clerics - uses MIND stat for attack and damage)
+  * Damage spells: fire bolt, lightning, frost ray, arcane blast
+  * Healing spells: cure wounds, healing word
+  * Buff spells: shield, protection, bless
 - "skill": Attempt a skill check (Physical, Subterfuge, Knowledge, Communication)
+- "move": Move to a new location (if exits are described)
 - "interact": Interact with an object or NPC
 - "defend": Take a defensive stance (+2 AC)
 - "flee": Attempt to escape combat
 - "other": Describe any other action
 
+COMBAT PRIORITY:
+- If enemies are present, you should usually attack or cast offensive spells!
+- Fighters: Attack with your weapon - you deal the most melee damage
+- Mages: Cast damage spells (fire, lightning, etc.) at enemies - your MIND is your power
+- Rogues: Attack or use Subterfuge to gain advantage
+
 IMPORTANT:
-- If you attack, you MUST target a specific enemy from the "Enemies:" list
-- If no enemies are present, choose a non-combat action
-- Stay in character based on your class and personality
+- If attacking or casting at an enemy, you MUST target a specific enemy from the "Enemies:" list
+- If no enemies are present, explore, interact, or use skills
+- USE YOUR CLASS ABILITIES - don't just defend or observe when you could act!
 
 Respond as JSON with:
 - "action_type": One of the action types above
@@ -229,6 +280,12 @@ Respond as JSON with:
         equipment: list[str]
     ) -> str:
         """Format a player system prompt with character info."""
+        # Get class-specific abilities
+        class_abilities = cls.CLASS_ABILITIES.get(
+            character_class,
+            cls.CLASS_ABILITIES["default"]
+        )
+
         return cls.PLAYER_SYSTEM.format(
             character_name=character_name,
             character_class=character_class,
@@ -239,7 +296,8 @@ Respond as JSON with:
             cha_bonus=stats.get("CHA", 0),
             current_hp=current_hp,
             max_hp=max_hp,
-            equipment=", ".join(equipment) if equipment else "none"
+            equipment=", ".join(equipment) if equipment else "none",
+            class_abilities=class_abilities
         )
 
     @classmethod

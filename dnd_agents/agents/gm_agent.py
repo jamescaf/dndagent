@@ -112,99 +112,99 @@ class GMAgent(BaseAgent):
         }
 
     def _auto_spawn_npcs(self, scene: GMSceneResponse, game_state: GameState) -> None:
-    """Automatically create entities for NPCs mentioned in the scene."""
-    from ..knowledge.graph import Entity, EntityType, Relationship, RelationType
-    from ..state.game_state import Character
-    
-    for npc_name in scene.npcs_present:
-        # Check if entity already exists
-        if self.context_manager.knowledge_graph.get_entity(npc_name):
-            continue
-            
-        # Determine if it's a threat (enemy)
-        is_threat = npc_name in scene.threats or any(
-            threat_word in npc_name.lower() 
-            for threat_word in ['goblin', 'orc', 'skeleton', 'bandit', 'wolf']
-        )
-        
-        if is_threat:
-            # Create as enemy with combat stats
-            stats = self._generate_enemy_stats(npc_name)
-            max_hp = 6 + stats["STR"]
-            
-            enemy = Character(
-                name=npc_name,
-                character_class="Monster",
-                stats=stats,
-                max_hp=max_hp,
-                current_hp=max_hp,
-                equipment={"weapon": "crude_weapon", "armor": "none"},
-                level=1,
-                is_player=False,
-                is_active=True,
-            )
-            
-            # Add to game state
-            game_state.characters[npc_name] = enemy
-            
-            # Add to knowledge graph
-            entity = Entity(
-                id=npc_name,
-                name=npc_name,
-                entity_type=EntityType.CREATURE,
-                properties={
-                    "max_hp": max_hp,
-                    "current_hp": max_hp,
-                    "is_hostile": True
-                }
-            )
-        else:
-            # Create as friendly/neutral NPC
-            entity = Entity(
-                id=npc_name,
-                name=npc_name,
-                entity_type=EntityType.CHARACTER,
-                properties={
-                    "is_hostile": False,
-                    "role": "npc"
-                }
-            )
-        
-        self.context_manager.knowledge_graph.add_entity(entity)
-        
-        # Place at current location
-        self.context_manager.knowledge_graph.add_relationship(
-            Relationship(
-                source_id=npc_name,
-                target_id=game_state.current_location,
-                relation_type=RelationType.LOCATED_AT
-            )
-        )
-        
-        logger.info(f"Auto-spawned entity: {npc_name}")
+        """Automatically create entities for NPCs mentioned in the scene."""
+        from ..knowledge.graph import Entity, EntityType, Relationship, RelationType
+        from ..state.game_state import Character
 
-def _generate_enemy_stats(self, enemy_name: str) -> dict[str, int]:
-    """Generate appropriate stats based on enemy type."""
-    name_lower = enemy_name.lower()
-    
-    # Weak enemies
-    if any(word in name_lower for word in ['rat', 'kobold', 'scout']):
-        return {"STR": 0, "DEX": 1, "MIND": -1, "CHA": -1}
-    
-    # Standard enemies
-    if any(word in name_lower for word in ['goblin', 'bandit', 'skeleton']):
+        for npc_name in scene.npcs_present:
+            # Check if entity already exists
+            if self.context_manager.knowledge_graph.get_entity(npc_name):
+                continue
+
+            # Determine if it's a threat (enemy)
+            is_threat = npc_name in scene.threats or any(
+                threat_word in npc_name.lower()
+                for threat_word in ['goblin', 'orc', 'skeleton', 'bandit', 'wolf']
+            )
+
+            if is_threat:
+                # Create as enemy with combat stats
+                stats = self._generate_enemy_stats(npc_name)
+                max_hp = 6 + stats["STR"]
+
+                enemy = Character(
+                    name=npc_name,
+                    character_class="Monster",
+                    stats=stats,
+                    max_hp=max_hp,
+                    current_hp=max_hp,
+                    equipment={"weapon": "crude_weapon", "armor": "none"},
+                    level=1,
+                    is_player=False,
+                    is_active=True,
+                )
+
+                # Add to game state
+                game_state.characters[npc_name] = enemy
+
+                # Add to knowledge graph
+                entity = Entity(
+                    id=npc_name,
+                    name=npc_name,
+                    entity_type=EntityType.CREATURE,
+                    properties={
+                        "max_hp": max_hp,
+                        "current_hp": max_hp,
+                        "is_hostile": True
+                    }
+                )
+            else:
+                # Create as friendly/neutral NPC
+                entity = Entity(
+                    id=npc_name,
+                    name=npc_name,
+                    entity_type=EntityType.CHARACTER,
+                    properties={
+                        "is_hostile": False,
+                        "role": "npc"
+                    }
+                )
+
+            self.context_manager.knowledge_graph.add_entity(entity)
+
+            # Place at current location
+            self.context_manager.knowledge_graph.add_relationship(
+                Relationship(
+                    source_id=npc_name,
+                    target_id=game_state.current_location,
+                    relation_type=RelationType.LOCATED_AT
+                )
+            )
+
+            logger.info(f"Auto-spawned entity: {npc_name}")
+
+    def _generate_enemy_stats(self, enemy_name: str) -> dict[str, int]:
+        """Generate appropriate stats based on enemy type."""
+        name_lower = enemy_name.lower()
+
+        # Weak enemies
+        if any(word in name_lower for word in ['rat', 'kobold', 'scout']):
+            return {"STR": 0, "DEX": 1, "MIND": -1, "CHA": -1}
+
+        # Standard enemies
+        if any(word in name_lower for word in ['goblin', 'bandit', 'skeleton']):
+            return {"STR": 1, "DEX": 1, "MIND": 0, "CHA": 0}
+
+        # Strong enemies
+        if any(word in name_lower for word in ['orc', 'warrior', 'champion']):
+            return {"STR": 2, "DEX": 0, "MIND": 0, "CHA": 1}
+
+        # Boss-level
+        if any(word in name_lower for word in ['chief', 'leader', 'shaman', 'captain']):
+            return {"STR": 3, "DEX": 1, "MIND": 1, "CHA": 2}
+
+        # Default
         return {"STR": 1, "DEX": 1, "MIND": 0, "CHA": 0}
-    
-    # Strong enemies
-    if any(word in name_lower for word in ['orc', 'warrior', 'champion']):
-        return {"STR": 2, "DEX": 0, "MIND": 0, "CHA": 1}
-    
-    # Boss-level
-    if any(word in name_lower for word in ['chief', 'leader', 'shaman', 'captain']):
-        return {"STR": 3, "DEX": 1, "MIND": 1, "CHA": 2}
-    
-    # Default
-    return {"STR": 1, "DEX": 1, "MIND": 0, "CHA": 0}
 
     def _handle_combat_turn(self, game_state: GameState) -> dict[str, Any]:
         """Handle NPC turns in combat."""

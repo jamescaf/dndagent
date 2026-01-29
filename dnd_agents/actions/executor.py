@@ -57,6 +57,8 @@ class ActionExecutor:
         match action.action_type:
             case ActionType.ATTACK:
                 return self._execute_attack(actor, target, game_state)
+            case ActionType.CAST:
+                return self._execute_cast(action, actor, target, game_state)
             case ActionType.SKILL:
                 return self._execute_skill_check(action, actor, game_state)
             case ActionType.DEFEND:
@@ -132,6 +134,184 @@ class ActionExecutor:
             state_changes=state_changes
         )
 
+    def _execute_cast(
+        self,
+        action: PlayerAction,
+        actor: "Character",
+        target: "Character | None",
+        game_state: "GameState"
+    ) -> ActionResult:
+        """Execute a spell casting action."""
+        stats = Stats(**actor.stats)
+        description_lower = action.description.lower()
+
+        # Determine spell type and effect from description
+        is_damage_spell = any(
+            word in description_lower
+            for word in ["fire", "lightning", "ice", "frost", "blast", "bolt",
+                        "burn", "shock", "attack", "strike", "damage", "harm"]
+        )
+        is_healing_spell = any(
+            word in description_lower
+            for word in ["heal", "cure", "restore", "mend", "soothe"]
+        )
+        is_buff_spell = any(
+            word in description_lower
+            for word in ["protect", "shield", "bless", "enhance", "strengthen"]
+        )
+
+        # Spell attack uses MIND stat
+        mind_bonus = stats.MIND
+
+        if is_damage_spell:
+            if target is None:
+                return ActionResult(
+                    success=False,
+                    narrative=f"{actor.name} tries to cast a spell but has no target!",
+                    state_changes={}
+                )
+
+            # Spell attack roll: d20 + MIND + level vs target AC
+            target_stats = Stats(**target.stats)
+            target_armor = target.equipment.get("armor", "none")
+            target_ac = self.rules.calculate_ac(target_stats, target_armor)
+
+            attack_roll = self.dice.roll("1d20")
+            total_attack = attack_roll.total + mind_bonus + actor.level
+
+            state_changes = {}
+
+            if total_attack >= target_ac:
+                # Spell damage: 1d8 + MIND (scales with caster)
+                damage_roll = self.dice.roll("1d8")
+                total_damage = max(1, damage_roll.total + mind_bonus)
+                new_hp = max(0, target.current_hp - total_damage)
+                state_changes["target_hp"] = new_hp
+
+                status = "still standing"
+                if new_hp <= 0:
+                    status = "collapses from the magical assault"
+                elif new_hp < target.max_hp // 2:
+                    status = "reels from the spell's impact"
+
+                narrative = (
+                    f"{actor.name} casts a spell at {target.name}! "
+                    f"Arcane energy strikes true for {total_damage} damage! "
+                    f"(Rolled {total_attack} vs AC {target_ac}) {target.name} {status}."
+                )
+
+                return ActionResult(
+                    success=True,
+                    narrative=narrative,
+                    damage_dealt=total_damage,
+                    state_changes=state_changes
+                )
+            else:
+                narrative = (
+                    f"{actor.name} casts a spell at {target.name}, "
+                    f"but the magic fizzles harmlessly! "
+                    f"(Rolled {total_attack} vs AC {target_ac})"
+                )
+                return ActionResult(
+                    success=False,
+                    narrative=narrative,
+                    state_changes={}
+                )
+
+        elif is_healing_spell:
+            # Healing targets self or ally
+            heal_target = actor
+            if target and target.is_player:
+                heal_target = target
+
+            heal_roll = self.dice.roll("1d8")
+            heal_amount = max(1, heal_roll.total + mind_bonus)
+            new_hp = min(heal_target.max_hp, heal_target.current_hp + heal_amount)
+            actual_heal = new_hp - heal_target.current_hp
+
+            narrative = (
+                f"{actor.name} channels healing magic into {heal_target.name}! "
+                f"Wounds close as {actual_heal} HP is restored. "
+                f"({heal_target.name} now at {new_hp}/{heal_target.max_hp} HP)"
+            )
+
+            return ActionResult(
+                success=True,
+                narrative=narrative,
+                state_changes={"healed": heal_target.name, "heal_amount": actual_heal}
+            )
+
+        elif is_buff_spell:
+            buff_target = actor
+            if target and target.is_player:
+                buff_target = target
+
+            narrative = (
+                f"{actor.name} weaves protective magic around {buff_target.name}! "
+                f"A shimmering barrier forms. (+2 AC until next turn)"
+            )
+
+            return ActionResult(
+                success=True,
+                narrative=narrative,
+                state_changes={"buffed": buff_target.name, "ac_bonus": 2}
+            )
+
+        else:
+            # Generic spell effect - let GM narrate
+            narrative = (
+                f"{actor.name} weaves arcane energies, casting: {action.description}"
+            )
+            return ActionResult(
+                success=True,
+                narrative=narrative,
+                state_changes={},
+                follow_up_required=True
+            )
+
+    def _determine_difficulty(self, description: str) -> Difficulty:
+        """
+        Determine appropriate difficulty based on action description.
+
+        Returns:
+            Difficulty level (EASY, MEDIUM, HARD, or VERY_HARD)
+        """
+        description_lower = description.lower()
+
+        # Easy tasks (DC 10) - routine, simple actions
+        easy_keywords = [
+            "look", "glance", "listen", "simple", "basic", "quick",
+            "easy", "common", "ordinary", "standard", "check"
+        ]
+
+        # Hard tasks (DC 20) - complex, dangerous, or requiring expertise
+        hard_keywords = [
+            "complex", "difficult", "dangerous", "intricate", "ancient",
+            "magical", "hidden", "secret", "trapped", "locked", "enchanted",
+            "precise", "careful", "stealthy", "undetected", "silently"
+        ]
+
+        # Very hard tasks (DC 25) - near impossible feats
+        very_hard_keywords = [
+            "impossible", "legendary", "master", "perfect", "flawless",
+            "incredible", "extraordinary"
+        ]
+
+        # Check for very hard first
+        if any(word in description_lower for word in very_hard_keywords):
+            return Difficulty.VERY_HARD
+
+        # Check for hard
+        if any(word in description_lower for word in hard_keywords):
+            return Difficulty.HARD
+
+        # Check for easy
+        if any(word in description_lower for word in easy_keywords):
+            return Difficulty.EASY
+
+        # Default to medium
+        return Difficulty.MEDIUM
+
     def _execute_skill_check(
         self,
         action: PlayerAction,
@@ -153,8 +333,8 @@ class ActionExecutor:
         else:
             skill_type = SkillType.PHYSICAL  # Default
 
-        # Determine DC (default medium)
-        dc = Difficulty.MEDIUM
+        # Determine DC dynamically based on action description
+        dc = self._determine_difficulty(action.description)
 
         stats = Stats(**actor.stats)
         success, roll = self.rules.make_skill_check(stats, skill_type, dc)

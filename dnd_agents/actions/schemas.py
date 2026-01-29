@@ -1,7 +1,7 @@
 """Pydantic models for game actions."""
 
 from enum import Enum
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 class ActionType(str, Enum):
     """Types of actions a player can take."""
     ATTACK = "attack"
+    CAST = "cast"
     MOVE = "move"
     SKILL = "skill"
     INTERACT = "interact"
