@@ -39,14 +39,23 @@ ollama pull gemma3:1b
 ## Usage
 
 ```bash
-# Start a new game
-python -m dnd_agents start --config config/game_config.yaml
+# Start a new game (runs 10 turns by default)
+python -m dnd_agents start
+
+# Start a new game with custom config and turn count
+python -m dnd_agents start --config config/game_config.yaml --turns 50
 
 # Resume a saved game
-python -m dnd_agents resume --save data/saved_games/session_001.json
+python -m dnd_agents resume data/saved_games/save_xxx.json --turns 20
 
-# Auto-play mode (watch agents play)
-python -m dnd_agents auto-play --config config/game_config.yaml --max-turns 50
+# List saved games
+python -m dnd_agents list
+
+# Run component tests
+python -m dnd_agents test
+
+# Test with LLM connection check
+python -m dnd_agents test --llm
 ```
 
 ## Project Structure
