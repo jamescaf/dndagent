@@ -118,12 +118,6 @@ def main() -> None:
         description="D&D Agents - Multi-agent D&D system using local LLMs"
     )
     parser.add_argument(
-        "--config",
-        type=Path,
-        default=Path("config/game_config.yaml"),
-        help="Path to game configuration file"
-    )
-    parser.add_argument(
         "--log-config",
         type=Path,
         default=Path("config/logging_config.yaml"),
@@ -132,8 +126,16 @@ def main() -> None:
 
     subparsers = parser.add_subparsers(dest="command", help="Commands")
 
+    # Shared config argument for commands that need it
+    config_args = {
+        "type": Path,
+        "default": Path("config/game_config.yaml"),
+        "help": "Path to game configuration file",
+    }
+
     # Start command
     start_parser = subparsers.add_parser("start", help="Start a new game")
+    start_parser.add_argument("--config", **config_args)
     start_parser.add_argument(
         "--turns",
         type=int,
@@ -144,6 +146,7 @@ def main() -> None:
 
     # Resume command
     resume_parser = subparsers.add_parser("resume", help="Resume a saved game")
+    resume_parser.add_argument("--config", **config_args)
     resume_parser.add_argument(
         "save_file",
         type=str,
