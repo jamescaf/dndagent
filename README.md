@@ -38,18 +38,24 @@ ollama pull gemma3:1b
 
 ## Usage
 
+Global options (`--config`, `--log-config`) must come before the subcommand.
+
 ```bash
 # Start a new game (runs 10 turns by default)
 python -m dnd_agents start
 
-# Start a new game with custom config and turn count
-python -m dnd_agents start --config config/game_config.yaml --turns 50
+# Start with more turns
+python -m dnd_agents start --turns 50
 
-# Resume a saved game
-python -m dnd_agents resume data/saved_games/save_xxx.json --turns 20
+# Start with custom config file
+python -m dnd_agents --config config/game_config.yaml start --turns 50
 
 # List saved games
 python -m dnd_agents list
+
+# Resume a saved game
+python -m dnd_agents resume data/saved_games/save_xxx.json
+python -m dnd_agents resume data/saved_games/save_xxx.json --turns 20
 
 # Run component tests
 python -m dnd_agents test
