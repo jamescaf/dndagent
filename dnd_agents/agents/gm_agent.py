@@ -12,6 +12,7 @@ from ..actions.schemas import (
     GMActionResolution,
     GMCombatNarration,
     GMNPCAction,
+    KGExtraction,
     PlayerAction,
     ActionResult,
 )
@@ -80,7 +81,10 @@ class GMAgent(BaseAgent):
 
         # Auto-spawn NPCs mentioned in scene
         self._auto_spawn_npcs(scene, game_state)
-    
+
+        # Auto-create notable features as KG entities
+        self._auto_create_features(scene, game_state)
+
         # Auto-initiate combat if threats present
         if scene.threats and not game_state.combat.is_active:
             hostile_npcs = [
@@ -117,8 +121,10 @@ class GMAgent(BaseAgent):
         from ..state.game_state import Character
 
         for npc_name in scene.npcs_present:
-            # Check if entity already exists
+            # Check if entity already exists (case-insensitive)
             if self.context_manager.knowledge_graph.get_entity(npc_name):
+                continue
+            if self.context_manager.knowledge_graph.get_entity_case_insensitive(npc_name):
                 continue
 
             # Determine if it's a threat (enemy)
@@ -205,6 +211,147 @@ class GMAgent(BaseAgent):
 
         # Default
         return {"STR": 1, "DEX": 1, "MIND": 0, "CHA": 0}
+
+    def _auto_create_features(self, scene: GMSceneResponse, game_state: GameState) -> None:
+        """Create KG entities for notable features mentioned in the scene."""
+        from ..knowledge.graph import Entity, EntityType, Relationship, RelationType
+
+        creature_words = [
+            'rat', 'spider', 'bat', 'snake', 'wolf', 'bear', 'insect',
+            'beetle', 'worm', 'lizard', 'bird', 'fish', 'crab',
+        ]
+
+        for feature in scene.notable_features:
+            feature_id = feature.lower().replace(" ", "_")
+
+            # Skip if already exists
+            if self.context_manager.knowledge_graph.get_entity(feature_id):
+                continue
+            if self.context_manager.knowledge_graph.get_entity_case_insensitive(feature_id):
+                continue
+
+            # Determine entity type based on heuristics
+            feature_lower = feature.lower()
+            if any(word in feature_lower for word in creature_words):
+                entity_type = EntityType.CREATURE
+            else:
+                entity_type = EntityType.ITEM
+
+            entity = Entity(
+                id=feature_id,
+                name=feature,
+                entity_type=entity_type,
+                properties={"source": "scene_description"}
+            )
+            self.context_manager.knowledge_graph.add_entity(entity)
+
+            # Place at current location
+            self.context_manager.knowledge_graph.add_relationship(
+                Relationship(
+                    source_id=feature_id,
+                    target_id=game_state.current_location,
+                    relation_type=RelationType.LOCATED_AT
+                )
+            )
+            logger.info(f"Auto-created feature entity: {feature}")
+
+    def extract_world_knowledge(self, narrative: str, game_state: GameState) -> None:
+        """Extract world knowledge from narrative and add to KG."""
+        from ..knowledge.graph import Entity, EntityType, Relationship, RelationType
+
+        # Build known entities list for context
+        known = [
+            f"{e.name} ({e.entity_type.value})"
+            for e in self.context_manager.knowledge_graph.entities.values()
+        ]
+
+        prompt = PromptTemplates.KG_EXTRACTION_PROMPT.format(
+            narrative=narrative,
+            known_entities=", ".join(known) if known else "none"
+        )
+
+        extraction, _ = self.generate_structured_response(
+            prompt=prompt,
+            response_model=KGExtraction,
+            default_factory=KGExtraction
+        )
+
+        entity_type_map = {
+            "item": EntityType.ITEM,
+            "creature": EntityType.CREATURE,
+            "location": EntityType.LOCATION,
+            "event": EntityType.EVENT,
+        }
+
+        relation_type_map = {
+            "located_at": RelationType.LOCATED_AT,
+            "owns": RelationType.OWNS,
+            "hostile_to": RelationType.HOSTILE_TO,
+            "part_of": RelationType.PART_OF,
+            "connected_to": RelationType.CONNECTED_TO,
+        }
+
+        # Create new entities
+        for ent in extraction.entities:
+            name = ent.get("name", "")
+            etype = ent.get("type", "item")
+            desc = ent.get("description", "")
+
+            if not name:
+                continue
+
+            entity_id = name.lower().replace(" ", "_")
+
+            # Skip if already exists
+            if self.context_manager.knowledge_graph.get_entity(entity_id):
+                continue
+            if self.context_manager.knowledge_graph.get_entity_case_insensitive(entity_id):
+                continue
+
+            entity = Entity(
+                id=entity_id,
+                name=name,
+                entity_type=entity_type_map.get(etype, EntityType.ITEM),
+                properties={"description": desc, "source": "kg_extraction"}
+            )
+            self.context_manager.knowledge_graph.add_entity(entity)
+            logger.info(f"KG extraction: created entity '{name}' ({etype})")
+
+        # Create new relationships
+        for fact in extraction.facts:
+            subject = fact.get("subject", "")
+            relation = fact.get("relation", "")
+            obj = fact.get("object", "")
+
+            if not (subject and relation and obj):
+                continue
+
+            rel_type = relation_type_map.get(relation)
+            if not rel_type:
+                continue
+
+            # Resolve entity IDs (try exact, then case-insensitive)
+            subject_id = subject.lower().replace(" ", "_")
+            obj_id = obj.lower().replace(" ", "_")
+
+            kg = self.context_manager.knowledge_graph
+            if not (kg.get_entity(subject_id) or kg.get_entity_case_insensitive(subject_id)):
+                continue
+            if not (kg.get_entity(obj_id) or kg.get_entity_case_insensitive(obj_id)):
+                continue
+
+            # Use the actual ID from KG
+            subject_entity = kg.get_entity(subject_id) or kg.get_entity_case_insensitive(subject_id)
+            obj_entity = kg.get_entity(obj_id) or kg.get_entity_case_insensitive(obj_id)
+
+            kg.add_relationship(
+                Relationship(
+                    source_id=subject_entity.id,
+                    target_id=obj_entity.id,
+                    relation_type=rel_type
+                )
+            )
+            logger.info(f"KG extraction: added fact '{subject}' -{relation}-> '{obj}'")
 
     def _handle_combat_turn(self, game_state: GameState) -> dict[str, Any]:
         """Handle NPC turns in combat."""
@@ -336,6 +483,10 @@ class GMAgent(BaseAgent):
         if combat_result.hit:
             new_hp = max(0, target.current_hp - combat_result.damage)
             game_state.update_character_hp(target.name, new_hp)
+            # Sync HP to knowledge graph
+            self.context_manager.knowledge_graph.update_entity_property(
+                target.name, "current_hp", new_hp
+            )
 
         # Record in context
         self.context_manager.add_action(
@@ -413,6 +564,8 @@ class GMAgent(BaseAgent):
             result.narrative = resolution.narrative
             if resolution.follow_up:
                 result.narrative += f" {resolution.follow_up}"
+            if resolution.new_location:
+                result.state_changes["new_location"] = resolution.new_location
 
         # Update game state if needed
         if "target_hp" in result.state_changes and target:
@@ -498,6 +651,14 @@ class GMAgent(BaseAgent):
         ]
 
         if not enemies_alive:
+            # Mark all enemies as defeated in KG
+            for enemy in game_state.combat.enemies:
+                self.context_manager.knowledge_graph.update_entity_property(
+                    enemy.name, "status", "defeated"
+                )
+                self.context_manager.knowledge_graph.update_entity_property(
+                    enemy.name, "current_hp", 0
+                )
             game_state.end_combat()
             return {
                 "type": "combat_end",

@@ -44,6 +44,7 @@ Provide your response as JSON with these fields:
 - "available_actions": List of 3-4 suggested actions players might take
 - "npcs_present": List of ALL NPCs/enemies in the scene with unique IDs (e.g., ["goblin_scout_1", "goblin_warrior_2"])
 - "threats": List of immediate dangers (should match hostile npcs_present)
+- "notable_features": List of notable objects, creatures, or environmental features (e.g., ["glowing fungus", "locked chest", "underground river"])
 
 Example of good npcs_present for a goblin encounter:
 ["goblin_warrior_1", "goblin_warrior_2", "goblin_shaman_1"]
@@ -62,7 +63,8 @@ Respond as JSON with:
 - "success": boolean indicating if the action succeeded
 - "narrative": 1-2 sentence description of what happens
 - "mechanical_effect": Any game mechanical changes (damage dealt, items gained, etc.)
-- "follow_up": What happens next or what the player notices"""
+- "follow_up": What happens next or what the player notices
+- "new_location": If the player moved to a new area, the name of that area (e.g., "Deep Cave Chamber"). Null if no movement."""
 
     GM_COMBAT_PROMPT = """Resolve this combat action.
 
@@ -92,6 +94,21 @@ Respond as JSON with:
 - "action": The action type (attack, move, flee, special)
 - "target": Who or what they target (if applicable)
 - "reasoning": Brief tactical reasoning (1 sentence)"""
+
+    # ========== Knowledge Graph Extraction ==========
+
+    KG_EXTRACTION_PROMPT = """What new world facts were established?
+
+Narrative: {narrative}
+Known entities: {known_entities}
+
+List ONLY genuinely NEW information not already known.
+
+Respond as JSON with:
+- "entities": New things discovered: [{{"name": "short_id", "type": "item/creature/location/event", "description": "10 words max"}}]
+- "facts": New relationships: [{{"subject": "entity_name", "relation": "located_at/owns/hostile_to/part_of/connected_to", "object": "entity_name"}}]
+
+If nothing new, use empty lists."""
 
     # ========== Player System Prompts ==========
 

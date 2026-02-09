@@ -132,6 +132,14 @@ class KnowledgeGraph:
             if e.entity_type == entity_type
         ]
 
+    def get_entity_case_insensitive(self, entity_id: str) -> Entity | None:
+        """Get an entity by ID with case-insensitive exact matching."""
+        entity_id_lower = entity_id.lower()
+        for eid, entity in self.entities.items():
+            if eid.lower() == entity_id_lower:
+                return entity
+        return None
+
     def find_entities_by_name(self, name: str) -> list[Entity]:
         """Find entities by name (case-insensitive partial match)."""
         name_lower = name.lower()

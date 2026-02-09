@@ -100,6 +100,10 @@ class GMSceneResponse(BaseModel):
         default_factory=list,
         description="Visible dangers"
     )
+    notable_features: list[str] = Field(
+        default_factory=list,
+        description="Notable objects, creatures, or features in the scene"
+    )
 
     @classmethod
     def default_scene(cls) -> "GMSceneResponse":
@@ -108,7 +112,8 @@ class GMSceneResponse(BaseModel):
             description="You find yourselves in a dimly lit area. The air is still.",
             available_actions=["Look around", "Move forward", "Listen carefully"],
             npcs_present=[],
-            threats=[]
+            threats=[],
+            notable_features=[]
         )
 
 class GMSpawnEntity(BaseModel):
@@ -144,6 +149,10 @@ class GMActionResolution(BaseModel):
     follow_up: str | None = Field(
         default=None,
         description="What happens next"
+    )
+    new_location: str | None = Field(
+        default=None,
+        description="New location name if the party moved"
     )
 
     @classmethod
@@ -208,6 +217,18 @@ class GMNPCAction(BaseModel):
 
 
 # ========== Combined Action Result ==========
+
+
+class KGExtraction(BaseModel):
+    """Extracted world knowledge from narrative."""
+    entities: list[dict[str, str]] = Field(
+        default_factory=list,
+        description="New entities: [{name, type, description}]"
+    )
+    facts: list[dict[str, str]] = Field(
+        default_factory=list,
+        description="New relationships: [{subject, relation, object}]"
+    )
 
 
 class ActionResult(BaseModel):

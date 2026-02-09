@@ -12,6 +12,7 @@ from .llm.interface import OllamaInterface
 from .context.manager import ContextManager
 from .knowledge.graph import KnowledgeGraph, Entity, EntityType, Relationship, RelationType
 from .state.game_state import GameState, Character, GamePhase
+from .actions.schemas import ActionResult, ActionType
 from .agents.gm_agent import GMAgent
 from .agents.player_agent import PlayerAgent
 from .rules.microlite20 import Rules
@@ -263,9 +264,10 @@ class GameOrchestrator:
                 # GM resolves the action
                 if "action" in player_result:
                     character = self.game_state.get_character(player_name)
+                    action = player_result["action"]
                     action_result = self.gm.resolve_player_action(
                         character,
-                        player_result["action"],
+                        action,
                         self.game_state
                     )
                     results["events"].append({
@@ -274,6 +276,18 @@ class GameOrchestrator:
                         "result": action_result.narrative,
                         "success": action_result.success
                     })
+
+                    # Sync state changes to KG
+                    self._sync_state_to_kg(action_result, player_name)
+
+                    # Extract world knowledge for non-attack discovery actions
+                    if (action_result.follow_up_required or
+                            action.action_type in (
+                                ActionType.SKILL, ActionType.INTERACT, ActionType.OTHER
+                            )):
+                        self.gm.extract_world_knowledge(
+                            action_result.narrative, self.game_state
+                        )
 
         # Auto-save
         if turn % self.auto_save_interval == 0:
@@ -313,6 +327,9 @@ class GameOrchestrator:
                         "success": action_result.success,
                         "damage": action_result.damage_dealt
                     })
+
+                    # Sync state changes to KG
+                    self._sync_state_to_kg(action_result, current_actor)
         else:
             # NPC turn
             npc_result = self.gm.take_turn(self.game_state)
@@ -322,6 +339,78 @@ class GameOrchestrator:
         self.game_state.combat.advance_turn()
 
         return events
+
+    def _sync_state_to_kg(self, action_result: ActionResult, actor_name: str) -> None:
+        """Sync state changes from an ActionResult to the knowledge graph."""
+        changes = action_result.state_changes
+
+        # Sync target HP changes
+        if "target_hp" in changes:
+            # Find the target from the action context — look for characters
+            # whose HP was just updated in game state
+            for char in self.game_state.characters.values():
+                if char.current_hp == changes["target_hp"] and char.name != actor_name:
+                    self.knowledge_graph.update_entity_property(
+                        char.name, "current_hp", changes["target_hp"]
+                    )
+                    if changes["target_hp"] <= 0:
+                        self.knowledge_graph.update_entity_property(
+                            char.name, "status", "defeated"
+                        )
+                    break
+
+        # Sync healing
+        if "healed" in changes:
+            healed_name = changes["healed"]
+            healed_char = self.game_state.get_character(healed_name)
+            if healed_char:
+                # Apply healing to game state
+                heal_amount = changes.get("heal_amount", 0)
+                new_hp = min(healed_char.max_hp, healed_char.current_hp + heal_amount)
+                self.game_state.update_character_hp(healed_name, new_hp)
+                self.knowledge_graph.update_entity_property(
+                    healed_name, "current_hp", new_hp
+                )
+
+        # Handle location changes
+        if "new_location" in changes:
+            self._handle_location_change(changes["new_location"])
+
+    def _handle_location_change(self, new_location_name: str) -> None:
+        """Create a new location in the KG and move the party there."""
+        old_location = self.game_state.current_location
+
+        # Create new location entity if it doesn't exist
+        if not self.knowledge_graph.get_entity(new_location_name):
+            location_entity = Entity(
+                id=new_location_name,
+                name=new_location_name,
+                entity_type=EntityType.LOCATION,
+                properties={"discovered_turn": self.game_state.current_turn}
+            )
+            self.knowledge_graph.add_entity(location_entity)
+
+        # Connect old and new locations
+        if self.knowledge_graph.get_entity(old_location):
+            self.knowledge_graph.add_relationship(Relationship(
+                source_id=old_location,
+                target_id=new_location_name,
+                relation_type=RelationType.CONNECTED_TO
+            ))
+
+        # Move all active players to new location
+        for player in self.game_state.get_active_players():
+            # Remove old LOCATED_AT edges by adding new one
+            # (NetworkX DiGraph replaces edges between same nodes)
+            self.knowledge_graph.add_relationship(Relationship(
+                source_id=player.name,
+                target_id=new_location_name,
+                relation_type=RelationType.LOCATED_AT
+            ))
+
+        # Update game state
+        self.game_state.current_location = new_location_name
+        logger.info(f"Party moved from '{old_location}' to '{new_location_name}'")
 
     def run_game(self, num_turns: int | None = None) -> None:
         """

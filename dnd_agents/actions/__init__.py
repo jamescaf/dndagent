@@ -7,6 +7,7 @@ from .schemas import (
     GMActionResolution,
     GMCombatNarration,
     GMNPCAction,
+    KGExtraction,
 )
 from .executor import ActionExecutor
 
@@ -17,5 +18,6 @@ __all__ = [
     "GMActionResolution",
     "GMCombatNarration",
     "GMNPCAction",
+    "KGExtraction",
     "ActionExecutor",
 ]
