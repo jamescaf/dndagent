@@ -26,7 +26,7 @@ def setup_logging(config_path: Path | None = None) -> None:
 
 def cmd_start(args: argparse.Namespace) -> None:
     """Start a new game."""
-    orchestrator = GameOrchestrator(args.config)
+    orchestrator = GameOrchestrator(args.config, trace_enabled=args.trace)
 
     # Check LLM connection
     if not orchestrator.llm.check_connection():
@@ -47,7 +47,7 @@ def cmd_resume(args: argparse.Namespace) -> None:
         print(f"Error: Save file not found: {save_path}")
         sys.exit(1)
 
-    orchestrator = GameOrchestrator(args.config)
+    orchestrator = GameOrchestrator(args.config, trace_enabled=args.trace)
     orchestrator.resume_game(save_path)
     orchestrator.run_game(num_turns=args.turns)
 
@@ -142,6 +142,11 @@ def main() -> None:
         default=10,
         help="Number of turns to run"
     )
+    start_parser.add_argument(
+        "--trace",
+        action="store_true",
+        help="Enable session trace logging to logs/traces/"
+    )
     start_parser.set_defaults(func=cmd_start)
 
     # Resume command
@@ -157,6 +162,11 @@ def main() -> None:
         type=int,
         default=10,
         help="Number of turns to run"
+    )
+    resume_parser.add_argument(
+        "--trace",
+        action="store_true",
+        help="Enable session trace logging to logs/traces/"
     )
     resume_parser.set_defaults(func=cmd_resume)
 

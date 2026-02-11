@@ -9,6 +9,7 @@ from typing import Any
 import yaml
 
 from .llm.interface import OllamaInterface
+from .trace import SessionTrace, TracingLLMInterface
 from .context.manager import ContextManager
 from .knowledge.graph import KnowledgeGraph, Entity, EntityType, Relationship, RelationType
 from .state.game_state import GameState, Character, GamePhase
@@ -26,7 +27,8 @@ class GameOrchestrator:
     def __init__(
         self,
         config_path: Path | str,
-        save_dir: Path | str | None = None
+        save_dir: Path | str | None = None,
+        trace_enabled: bool = False,
     ):
         """
         Initialize the game orchestrator.
@@ -64,6 +66,12 @@ class GameOrchestrator:
             timeout=llm_config.get("timeout", 60)
         )
 
+        # Tracing (must be set up before agents so they get the wrapped LLM)
+        self.trace: SessionTrace | None = None
+        if trace_enabled:
+            self.trace = SessionTrace()
+            self.llm = TracingLLMInterface.from_interface(self.llm, self.trace)
+
         # Initialize agents
         self.gm = GMAgent(self.llm, self.context_manager, self.rules)
         self.player_agents: dict[str, PlayerAgent] = {}
@@ -87,6 +95,9 @@ class GameOrchestrator:
         """
         session_id = str(uuid.uuid4())[:8]
         logger.info(f"Starting new game session: {session_id}")
+
+        if self.trace:
+            self.trace.start(session_id, self.llm.model)
 
         # Create game state
         scenario = self.config.get("scenario", {})
@@ -170,6 +181,9 @@ class GameOrchestrator:
         if kg_path.exists():
             self.knowledge_graph.load(kg_path)
 
+        if self.trace:
+            self.trace.start(self.game_state.session_id, self.llm.model)
+
         logger.info(f"Resumed game session: {self.game_state.session_id}")
 
         return self.game_state
@@ -223,6 +237,9 @@ class GameOrchestrator:
         turn = self.game_state.current_turn
 
         logger.info(f"=== Turn {turn} ===")
+
+        if self.trace:
+            self.trace.begin_turn(turn, self.game_state.get_summary())
 
         results = {
             "turn": turn,
@@ -292,6 +309,9 @@ class GameOrchestrator:
         # Auto-save
         if turn % self.auto_save_interval == 0:
             self.save_game()
+
+        if self.trace:
+            self.trace.end_turn()
 
         return results
 
@@ -454,6 +474,10 @@ class GameOrchestrator:
                 print(f"\nError: {e}")
                 self.save_game()
                 break
+
+        if self.trace:
+            self.trace.close()
+            print(f"\nSession trace: {self.trace.file_path}")
 
         print(f"\n{'='*60}")
         print("Game session ended.")
