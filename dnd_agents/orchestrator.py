@@ -1,6 +1,7 @@
 """Game orchestrator for managing the game loop."""
 
 import logging
+import random
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -17,6 +18,7 @@ from .actions.schemas import ActionResult, ActionType
 from .agents.gm_agent import GMAgent
 from .agents.player_agent import PlayerAgent
 from .rules.microlite20 import Rules
+from .state.zone_map import ZoneMap
 
 logger = logging.getLogger(__name__)
 
@@ -72,8 +74,12 @@ class GameOrchestrator:
             self.trace = SessionTrace()
             self.llm = TracingLLMInterface.from_interface(self.llm, self.trace)
 
+        # Initialize zone map
+        zone_configs = self.config.get("map", {}).get("zones", [])
+        self.zone_map = ZoneMap(zone_configs) if zone_configs else None
+
         # Initialize agents
-        self.gm = GMAgent(self.llm, self.context_manager, self.rules)
+        self.gm = GMAgent(self.llm, self.context_manager, self.rules, self.zone_map)
         self.player_agents: dict[str, PlayerAgent] = {}
 
         # Game state
@@ -147,6 +153,41 @@ class GameOrchestrator:
                 target_id=self.game_state.current_location,
                 relation_type=RelationType.LOCATED_AT
             ))
+
+        # Seed zone map into KG and set starting zone
+        if self.zone_map:
+            starting_zone = self.zone_map.get_zone_by_name(
+                self.game_state.current_location
+            )
+            if starting_zone:
+                self.game_state.set_flag("current_zone_id", starting_zone.id)
+                self.game_state.set_flag("turns_in_zone", 0)
+                # Inject current exits
+                exits = self.zone_map.get_exit_names(starting_zone.id)
+                self.game_state.set_flag("current_exits", exits)
+
+            for zone in self.zone_map.zones.values():
+                if not self.knowledge_graph.get_entity(zone.name):
+                    zone_entity = Entity(
+                        id=zone.name,
+                        name=zone.name,
+                        entity_type=EntityType.LOCATION,
+                        properties={
+                            "zone_id": zone.id,
+                            "description": zone.description,
+                        }
+                    )
+                    self.knowledge_graph.add_entity(zone_entity)
+
+                for exit_ in zone.exits:
+                    target_zone = self.zone_map.get_zone(exit_.target)
+                    if target_zone and self.knowledge_graph.get_entity(target_zone.name):
+                        self.knowledge_graph.add_relationship(Relationship(
+                            source_id=zone.name,
+                            target_id=target_zone.name,
+                            relation_type=RelationType.CONNECTED_TO,
+                            properties={"direction": exit_.direction}
+                        ))
 
         # Set initial situation
         self.game_state.set_flag("situation", scenario.get("description", "exploring"))
@@ -247,6 +288,13 @@ class GameOrchestrator:
             "events": []
         }
 
+        # Inject current exits from zone map before GM scene
+        if self.zone_map:
+            zone_id = self.game_state.get_flag("current_zone_id")
+            if zone_id:
+                exits = self.zone_map.get_exit_names(zone_id)
+                self.game_state.set_flag("current_exits", exits)
+
         # GM describes scene at start of exploration or new combat round
         if (self.game_state.phase == GamePhase.EXPLORATION or
             (self.game_state.phase == GamePhase.COMBAT and
@@ -297,6 +345,10 @@ class GameOrchestrator:
                     # Sync state changes to KG
                     self._sync_state_to_kg(action_result, player_name)
 
+                    # Break exploration loop if combat was triggered
+                    if self.game_state.phase == GamePhase.COMBAT:
+                        break
+
                     # Extract world knowledge for non-attack discovery actions
                     if (action_result.follow_up_required or
                             action.action_type in (
@@ -305,6 +357,13 @@ class GameOrchestrator:
                         self.gm.extract_world_knowledge(
                             action_result.narrative, self.game_state
                         )
+
+            # Check for random encounter after exploration actions
+            if self.game_state.phase == GamePhase.EXPLORATION:
+                encounter_enemies = self._check_encounter()
+                if encounter_enemies:
+                    combat_result = self.trigger_combat(encounter_enemies)
+                    results["events"].append(combat_result)
 
         # Auto-save
         if turn % self.auto_save_interval == 0:
@@ -392,9 +451,100 @@ class GameOrchestrator:
                     healed_name, "current_hp", new_hp
                 )
 
-        # Handle location changes
+        # Handle self-damage (e.g. trap sprung on actor)
+        if "self_hp" in changes:
+            self.game_state.update_character_hp(actor_name, changes["self_hp"])
+            self.knowledge_graph.update_entity_property(
+                actor_name, "current_hp", changes["self_hp"]
+            )
+
+        # Handle alert enemies (failed stealth, loud noise, etc.)
+        if "alert_enemies" in changes:
+            self._trigger_alert_encounter()
+
+        # Handle zone/location changes
+        if "new_zone_id" in changes:
+            self.game_state.set_flag("current_zone_id", changes["new_zone_id"])
+            self.game_state.set_flag("turns_in_zone", 0)
         if "new_location" in changes:
             self._handle_location_change(changes["new_location"])
+
+    def _build_encounter_enemies(self, zone_id: str) -> list[dict]:
+        """Build enemy config list from encounter table for a zone."""
+        encounters_config = self.config.get("encounters", {})
+        zone_table = encounters_config.get(zone_id, encounters_config.get("default", {}))
+        if not zone_table:
+            return []
+
+        enemies = []
+        for template in zone_table.get("enemies", []):
+            count = random.randint(
+                template.get("count_min", 1),
+                template.get("count_max", 1)
+            )
+            for i in range(1, count + 1):
+                enemy_name = f"{template['name']}_{i}"
+                enemies.append({
+                    "name": enemy_name,
+                    "stats": template.get("stats", {"STR": 1, "DEX": 1, "MIND": 0, "CHA": 0}),
+                    "hp": template.get("hp", 7),
+                    "equipment": template.get("equipment", {"weapon": "claws", "armor": "none"}),
+                })
+        return enemies
+
+    def _trigger_alert_encounter(self) -> None:
+        """Trigger an encounter because enemies were alerted."""
+        if self.game_state.phase == GamePhase.COMBAT:
+            return  # Already in combat
+
+        zone_id = self.game_state.get_flag("current_zone_id", "default")
+        enemies = self._build_encounter_enemies(zone_id)
+        if enemies:
+            logger.info(f"Alert encounter triggered! Spawning {len(enemies)} enemies")
+            self.trigger_combat(enemies)
+        else:
+            logger.info("Enemies alerted but no encounter table found")
+
+    def _check_encounter(self) -> list[dict] | None:
+        """
+        Check if a random encounter should trigger based on turns in zone.
+
+        Returns list of enemy configs if encounter triggers, None otherwise.
+        """
+        if self.game_state.phase != GamePhase.EXPLORATION:
+            return None
+        if self.game_state.combat.is_active:
+            return None
+
+        zone_id = self.game_state.get_flag("current_zone_id", "default")
+        turns_in_zone = self.game_state.get_flag("turns_in_zone", 0)
+        turns_in_zone += 1
+        self.game_state.set_flag("turns_in_zone", turns_in_zone)
+
+        encounters_config = self.config.get("encounters", {})
+        zone_table = encounters_config.get(zone_id, encounters_config.get("default", {}))
+        if not zone_table:
+            return None
+
+        check_interval = zone_table.get("check_interval", 3)
+        if turns_in_zone % check_interval != 0:
+            return None
+
+        checks_so_far = turns_in_zone // check_interval
+        base_chance = zone_table.get("base_chance", 0.4)
+        escalation = zone_table.get("escalation", 0.3)
+        probability = min(1.0, base_chance + escalation * (checks_so_far - 1))
+
+        roll = random.random()
+        logger.info(
+            f"Encounter check: zone={zone_id}, turn_in_zone={turns_in_zone}, "
+            f"check #{checks_so_far}, probability={probability:.0%}, roll={roll:.2f}"
+        )
+
+        if roll < probability:
+            return self._build_encounter_enemies(zone_id)
+
+        return None
 
     def _handle_location_change(self, new_location_name: str) -> None:
         """Create a new location in the KG and move the party there."""

@@ -30,12 +30,14 @@ class GMAgent(BaseAgent):
         self,
         llm: OllamaInterface,
         context_manager: ContextManager,
-        rules: Rules | None = None
+        rules: Rules | None = None,
+        zone_map=None
     ):
         """Initialize GM agent."""
         super().__init__("GM", llm, context_manager)
         self.rules = rules or Rules()
-        self.executor = ActionExecutor(self.rules)
+        self.zone_map = zone_map
+        self.executor = ActionExecutor(self.rules, zone_map=zone_map)
 
     def get_system_prompt(self) -> str:
         """Get GM system prompt."""
@@ -60,11 +62,13 @@ class GMAgent(BaseAgent):
         """Describe the current scene."""
         players = game_state.get_player_names()
         situation = game_state.flags.get("situation", "exploring the area")
+        exits = game_state.flags.get("current_exits", [])
 
         prompt = PromptTemplates.format_gm_scene(
             location=game_state.current_location,
             characters=players,
-            situation=situation
+            situation=situation,
+            exits=exits
         )
 
         system_prompt, user_prompt = self.build_context_prompt(
@@ -548,11 +552,13 @@ class GMAgent(BaseAgent):
 
         # Get narrative enhancement from LLM for non-attack actions
         if action.action_type.value != "attack" and result.follow_up_required:
+            outcome_str = "SUCCESS" if result.success else "FAILED"
             prompt = PromptTemplates.format_gm_resolve_action(
                 player_name=player.name,
                 action_type=action.action_type.value,
                 target=action.target or "none",
-                description=action.description
+                description=action.description,
+                outcome=f"{outcome_str}: {result.narrative}"
             )
 
             resolution, _ = self.generate_structured_response(

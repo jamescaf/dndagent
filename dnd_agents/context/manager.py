@@ -99,6 +99,11 @@ class ContextManager:
         recent = self.action_history[-count:]
         return [a.to_string() for a in recent]
 
+    def get_last_actions_for_actor(self, actor_name: str, count: int = 2) -> list[str]:
+        """Get the last N actions taken by a specific actor."""
+        actor_actions = [a for a in self.action_history if a.actor == actor_name]
+        return [a.to_string() for a in actor_actions[-count:]]
+
     def get_relevant_facts(self, entity_ids: list[str]) -> list[str]:
         """Get relevant facts from knowledge graph."""
         return self.knowledge_graph.get_relevant_facts(

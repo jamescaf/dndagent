@@ -64,3 +64,128 @@ scenario:
   name: "The Goblin Cave"
   description: "The party has been hired to clear a cave of goblins threatening a nearby village."
   starting_location: "Cave Entrance"
+
+# Spatial Map
+map:
+  zones:
+    - id: cave_entrance
+      name: "Cave Entrance"
+      description: "The mouth of the cave yawns open, daylight filtering in from behind."
+      exits:
+        - target: narrow_tunnel
+          direction: north
+          description: "A narrow tunnel leads deeper into the darkness"
+
+    - id: narrow_tunnel
+      name: "Narrow Tunnel"
+      description: "A cramped passage barely wide enough for two abreast. Water drips from the ceiling."
+      exits:
+        - target: cave_entrance
+          direction: south
+          description: "Back toward the cave entrance and daylight"
+        - target: guard_post
+          direction: north
+          description: "The tunnel opens up ahead into a wider chamber"
+        - target: fungus_cavern
+          direction: east
+          description: "A side passage branches off, glowing faintly with bioluminescence"
+
+    - id: guard_post
+      name: "Guard Post"
+      description: "A wider chamber with crude barricades made of stacked stones. Goblin graffiti marks the walls."
+      exits:
+        - target: narrow_tunnel
+          direction: south
+          description: "The narrow tunnel back the way you came"
+        - target: chieftain_hall
+          direction: north
+          description: "A large archway leads to a grand chamber beyond"
+
+    - id: fungus_cavern
+      name: "Fungus Cavern"
+      description: "A damp cavern carpeted with glowing fungi. Strange spores drift through the air."
+      exits:
+        - target: narrow_tunnel
+          direction: west
+          description: "The side passage back to the main tunnel"
+        - target: treasure_room
+          direction: north
+          description: "A hidden passage behind a curtain of hanging moss"
+
+    - id: chieftain_hall
+      name: "Chieftain's Hall"
+      description: "A vast natural cavern converted into a throne room. A crude throne of bones sits at the far end."
+      exits:
+        - target: guard_post
+          direction: south
+          description: "Back through the archway to the guard post"
+        - target: treasure_room
+          direction: east
+          description: "A heavy wooden door reinforced with iron bands"
+
+    - id: treasure_room
+      name: "Treasure Room"
+      description: "A small chamber piled with stolen goods — crates, sacks, and a few glinting coins."
+      exits:
+        - target: chieftain_hall
+          direction: west
+          description: "The reinforced door back to the chieftain's hall"
+        - target: fungus_cavern
+          direction: south
+          description: "The hidden passage through the hanging moss"
+
+# Encounter Tables (per-zone)
+encounters:
+  default:
+    check_interval: 3    # check every 3 turns in zone
+    base_chance: 0.4     # 40% base chance
+    escalation: 0.3      # +30% per check
+    enemies:
+      - name: "goblin_warrior"
+        count_min: 1
+        count_max: 3
+        stats: { STR: 1, DEX: 1, MIND: 0, CHA: 0 }
+        hp: 7
+        equipment: { weapon: "crude_sword", armor: "leather" }
+
+  guard_post:
+    check_interval: 1    # check immediately
+    base_chance: 1.0     # guaranteed on entry
+    escalation: 0.0
+    enemies:
+      - name: "goblin_sentry"
+        count_min: 2
+        count_max: 3
+        stats: { STR: 1, DEX: 2, MIND: 0, CHA: 0 }
+        hp: 7
+        equipment: { weapon: "spear", armor: "leather" }
+
+  chieftain_hall:
+    check_interval: 1
+    base_chance: 1.0
+    escalation: 0.0
+    enemies:
+      - name: "goblin_chieftain"
+        count_min: 1
+        count_max: 1
+        stats: { STR: 3, DEX: 1, MIND: 1, CHA: 2 }
+        hp: 12
+        equipment: { weapon: "battleaxe", armor: "chainmail" }
+      - name: "goblin_bodyguard"
+        count_min: 2
+        count_max: 2
+        stats: { STR: 2, DEX: 1, MIND: 0, CHA: 0 }
+        hp: 9
+        equipment: { weapon: "longsword", armor: "chainmail" }
+
+  cave_entrance:
+    check_interval: 5
+    base_chance: 0.2
+    escalation: 0.1
+    enemies:
+      - name: "goblin_scout"
+        count_min: 1
+        count_max: 2
+        stats: { STR: 0, DEX: 2, MIND: 0, CHA: 0 }
+        hp: 6
+        equipment: { weapon: "shortbow", armor: "leather" }

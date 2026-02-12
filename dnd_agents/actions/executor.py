@@ -26,10 +26,11 @@ logger = logging.getLogger(__name__)
 class ActionExecutor:
     """Executes and validates game actions."""
 
-    def __init__(self, rules: Rules | None = None):
+    def __init__(self, rules: Rules | None = None, zone_map=None):
         """Initialize with rules engine."""
         self.rules = rules or Rules()
         self.dice = self.rules.dice
+        self.zone_map = zone_map
 
     def execute_player_action(
         self,
@@ -312,6 +313,83 @@ class ActionExecutor:
         # Default to medium
         return Difficulty.MEDIUM
 
+    def _determine_failure_consequence(
+        self,
+        skill_type: SkillType,
+        description: str,
+        actor: "Character"
+    ) -> dict:
+        """
+        Determine mechanical consequence for a failed skill check.
+
+        Returns dict with keys like alert_enemies, self_damage, narrative_suffix,
+        and follow_up_required.
+        """
+        desc_lower = description.lower()
+        consequence: dict = {"narrative_suffix": "", "follow_up_required": False}
+
+        if skill_type == SkillType.SUBTERFUGE:
+            if any(w in desc_lower for w in ["sneak", "hide", "stealth", "quiet", "scout"]):
+                consequence["alert_enemies"] = True
+                consequence["narrative_suffix"] = (
+                    f" {actor.name}'s fumbling echoes through the corridors — "
+                    f"something heard that."
+                )
+            elif any(w in desc_lower for w in ["trap", "disable", "disarm"]):
+                trap_damage = self.dice.roll("1d6").total
+                consequence["self_damage"] = trap_damage
+                consequence["narrative_suffix"] = (
+                    f" The trap springs on {actor.name}, dealing {trap_damage} damage!"
+                )
+            elif any(w in desc_lower for w in ["pick", "lock", "open"]):
+                consequence["alert_enemies"] = True
+                consequence["narrative_suffix"] = (
+                    f" The failed attempt makes a loud noise that echoes through the area."
+                )
+            else:
+                consequence["alert_enemies"] = True
+                consequence["narrative_suffix"] = (
+                    f" {actor.name}'s clumsy attempt draws unwanted attention."
+                )
+
+        elif skill_type == SkillType.PHYSICAL:
+            if any(w in desc_lower for w in ["climb", "jump", "leap"]):
+                fall_damage = self.dice.roll("1d4").total
+                consequence["self_damage"] = fall_damage
+                consequence["narrative_suffix"] = (
+                    f" {actor.name} falls, taking {fall_damage} damage!"
+                )
+            elif any(w in desc_lower for w in ["break", "force", "push", "smash"]):
+                consequence["alert_enemies"] = True
+                consequence["narrative_suffix"] = (
+                    f" The loud noise reverberates through the area — "
+                    f"something stirs in the darkness."
+                )
+            else:
+                consequence["narrative_suffix"] = (
+                    f" {actor.name} strains but accomplishes nothing, wasting precious time."
+                )
+                consequence["follow_up_required"] = True
+
+        elif skill_type == SkillType.KNOWLEDGE:
+            consequence["follow_up_required"] = True
+            consequence["narrative_suffix"] = (
+                f" {actor.name} racks their brain but recalls nothing useful, "
+                f"wasting valuable time."
+            )
+
+        elif skill_type == SkillType.COMMUNICATION:
+            consequence["follow_up_required"] = True
+            consequence["narrative_suffix"] = (
+                f" {actor.name}'s words fall flat — the attempt may have "
+                f"made things worse."
+            )
+
+        else:
+            consequence["narrative_suffix"] = " Nothing comes of the attempt."
+
+        return consequence
+
     def _execute_skill_check(
         self,
         action: PlayerAction,
@@ -339,21 +417,40 @@ class ActionExecutor:
         stats = Stats(**actor.stats)
         success, roll = self.rules.make_skill_check(stats, skill_type, dc)
 
+        state_changes: dict = {"skill_check": skill_type.value}
+        follow_up = False
+
         if success:
             narrative = (
                 f"{actor.name} succeeds at {action.description}! "
                 f"(Rolled {roll.total} vs DC {dc.value})"
             )
+            # Successful skill checks need GM narration too
+            follow_up = True
         else:
             narrative = (
                 f"{actor.name} fails to {action.description}. "
                 f"(Rolled {roll.total} vs DC {dc.value})"
             )
+            # Determine fail-forward consequence
+            consequence = self._determine_failure_consequence(
+                skill_type, action.description, actor
+            )
+            narrative += consequence["narrative_suffix"]
+            follow_up = consequence.get("follow_up_required", False)
+
+            if "alert_enemies" in consequence:
+                state_changes["alert_enemies"] = True
+            if "self_damage" in consequence:
+                damage = consequence["self_damage"]
+                new_hp = max(0, actor.current_hp - damage)
+                state_changes["self_hp"] = new_hp
 
         return ActionResult(
             success=success,
             narrative=narrative,
-            state_changes={"skill_check": skill_type.value}
+            state_changes=state_changes,
+            follow_up_required=follow_up
         )
 
     def _execute_defend(
@@ -371,18 +468,111 @@ class ActionExecutor:
             state_changes={"defending": True, "ac_bonus": 2}
         )
 
+    def _parse_direction(
+        self,
+        description: str,
+        target: str | None,
+        exits: list
+    ) -> str | None:
+        """Parse direction from action description/target against zone exits."""
+        # Keyword aliases for common movement phrases
+        direction_aliases = {
+            "forward": "north", "ahead": "north", "deeper": "north",
+            "onward": "north", "continue": "north",
+            "back": "south", "retreat": "south", "return": "south",
+            "left": "west", "right": "east",
+        }
+
+        combined = f"{target or ''} {description}".lower()
+
+        # First: check for exact direction names from available exits
+        exit_directions = [e.direction.lower() for e in exits]
+        for direction in exit_directions:
+            if direction in combined:
+                return direction
+
+        # Second: try keyword aliases
+        for alias, canonical in direction_aliases.items():
+            if alias in combined:
+                if canonical in exit_directions:
+                    return canonical
+
+        # Third: fuzzy match against exit descriptions
+        for exit_ in exits:
+            desc_words = exit_.description.lower().split()
+            for word in combined.split():
+                if len(word) > 3 and word in desc_words:
+                    return exit_.direction.lower()
+
+        return None
+
     def _execute_move(
         self,
         action: PlayerAction,
         actor: "Character",
         game_state: "GameState"
     ) -> ActionResult:
-        """Execute a move action."""
-        destination = action.target or "a new position"
+        """Execute a move action, resolving against zone map if available."""
+        if not self.zone_map:
+            # Fallback: no zone map, use old behavior with follow_up
+            destination = action.target or "a new position"
+            return ActionResult(
+                success=True,
+                narrative=f"{actor.name} moves toward {destination}.",
+                state_changes={"position": destination},
+                follow_up_required=True
+            )
+
+        zone_id = game_state.get_flag("current_zone_id")
+        if not zone_id:
+            return ActionResult(
+                success=False,
+                narrative=f"{actor.name} tries to move but the path is unclear.",
+                state_changes={}
+            )
+
+        zone = self.zone_map.get_zone(zone_id)
+        if not zone or not zone.exits:
+            return ActionResult(
+                success=False,
+                narrative=f"There are no obvious exits from here.",
+                state_changes={}
+            )
+
+        direction = self._parse_direction(
+            action.description, action.target, zone.exits
+        )
+
+        if direction is None:
+            exit_names = self.zone_map.get_exit_names(zone_id)
+            exits_list = "; ".join(exit_names)
+            return ActionResult(
+                success=False,
+                narrative=(
+                    f"{actor.name} looks for a way to go but can't find that path. "
+                    f"Available exits: {exits_list}"
+                ),
+                state_changes={}
+            )
+
+        target_zone = self.zone_map.get_exit_target(zone_id, direction)
+        if not target_zone:
+            return ActionResult(
+                success=False,
+                narrative=f"{actor.name} can't go that way.",
+                state_changes={}
+            )
+
         return ActionResult(
             success=True,
-            narrative=f"{actor.name} moves toward {destination}.",
-            state_changes={"position": destination}
+            narrative=(
+                f"{actor.name} leads the party {direction} into {target_zone.name}. "
+                f"{target_zone.description}"
+            ),
+            state_changes={
+                "new_location": target_zone.name,
+                "new_zone_id": target_zone.id,
+            }
         )
 
     def _execute_flee(

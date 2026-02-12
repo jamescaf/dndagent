@@ -98,9 +98,19 @@ class PlayerAgent(BaseAgent):
                     else:
                         npcs.append(char.name)
         
+        # Get last actions for anti-repeat
+        last_actions = self.context_manager.get_last_actions_for_actor(
+            self.character.name, 2
+        )
+        last_actions_str = "\n".join(last_actions) if last_actions else "None yet"
+
+        # Get available exits
+        current_exits = game_state.flags.get("current_exits", [])
+        exits_str = "\n".join(f"- {e}" for e in current_exits) if current_exits else "None visible"
+
         # Format the prompt with entity lists
         from ..prompts.templates import PromptTemplates
-        
+
         action_prompt = PromptTemplates.PLAYER_ACTION_PROMPT.format(
             location=game_state.current_location,
             scene_description=self.context_manager.scene_summary or "A mysterious area",
@@ -110,7 +120,9 @@ class PlayerAgent(BaseAgent):
             objects="[examine scene for objects]",
             current_hp=self.character.current_hp,
             max_hp=self.character.max_hp,
-            status_effects=", ".join(self.character.conditions) if self.character.conditions else "None"
+            status_effects=", ".join(self.character.conditions) if self.character.conditions else "None",
+            your_last_actions=last_actions_str,
+            exits=exits_str
         )
         
         system_prompt, user_prompt = self.build_context_prompt(

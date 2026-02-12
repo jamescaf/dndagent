@@ -32,16 +32,19 @@ Respond in JSON format as specified."""
 Location: {location}
 Characters present: {characters}
 Situation: {situation}
+Exits: {exits}
 
 IMPORTANT INSTRUCTIONS:
 1. If there are threats, enemies, or NPCs mentioned in the situation, you MUST list them in npcs_present
 2. Each NPC/enemy name must be unique and specific (e.g., "goblin_scout_1", "goblin_warrior_2")
 3. If enemies are present, list them in threats as well
 4. Include concrete interactive elements players can engage with
+5. Mention the exits naturally in the scene description
+6. Include at least one "move [direction]" in available_actions based on the exits
 
 Provide your response as JSON with these fields:
 - "description": A vivid 2-3 sentence scene description
-- "available_actions": List of 3-4 suggested actions players might take
+- "available_actions": List of 3-4 suggested actions players might take (include at least one move direction)
 - "npcs_present": List of ALL NPCs/enemies in the scene with unique IDs (e.g., ["goblin_scout_1", "goblin_warrior_2"])
 - "threats": List of immediate dangers (should match hostile npcs_present)
 - "notable_features": List of notable objects, creatures, or environmental features (e.g., ["glowing fungus", "locked chest", "underground river"])
@@ -56,8 +59,9 @@ Player: {player_name}
 Action: {action_type}
 Target: {target}
 Description: {description}
+Outcome: {outcome}
 
-Determine the outcome and describe it.
+Describe what happens as a result. If the action FAILED, describe the negative consequence — failures are NEVER "nothing happens." Failed stealth alerts guards. Failed lockpicking jams the lock. Failed climbing means a painful fall. Something ALWAYS happens on failure.
 
 Respond as JSON with:
 - "success": boolean indicating if the action succeeded
@@ -178,6 +182,14 @@ YOUR STATUS:
 HP: {current_hp}/{max_hp}
 {status_effects}
 
+YOUR LAST ACTIONS:
+{your_last_actions}
+
+DO NOT repeat your last action. If your last action didn't work, try a DIFFERENT approach.
+
+EXITS:
+{exits}
+
 AVAILABLE ACTIONS:
 - "attack": Melee/ranged weapon attack (Fighters excel here - uses STR/DEX)
 - "cast": Cast a spell (Mages/Clerics - uses MIND stat for attack and damage)
@@ -238,13 +250,16 @@ Respond as JSON with:
         cls,
         location: str,
         characters: list[str],
-        situation: str
+        situation: str,
+        exits: list[str] | None = None
     ) -> str:
         """Format a GM scene description prompt."""
+        exits_str = ", ".join(exits) if exits else "None visible"
         return cls.GM_SCENE_PROMPT.format(
             location=location,
             characters=", ".join(characters),
-            situation=situation
+            situation=situation,
+            exits=exits_str
         )
 
     @classmethod
@@ -253,14 +268,16 @@ Respond as JSON with:
         player_name: str,
         action_type: str,
         target: str,
-        description: str
+        description: str,
+        outcome: str = ""
     ) -> str:
         """Format a GM action resolution prompt."""
         return cls.GM_RESOLVE_ACTION_PROMPT.format(
             player_name=player_name,
             action_type=action_type,
             target=target or "none",
-            description=description
+            description=description,
+            outcome=outcome or "pending"
         )
 
     @classmethod
